@@ -1,105 +1,86 @@
 import streamlit as st
-import pandas as pd
+import duckdb
 import geopandas as gpd
-from arcgis.gis import GIS
-from arcgis.features import FeatureLayer
+from shapely import wkb
+import pandas as pd
 import folium
-from shapely.geometry import Point
 from streamlit_folium import folium_static
-import matplotlib.pyplot as plt
+
+# Connect to DuckDB
+con = duckdb.connect('noxious_weeds.duckdb')
+
+# Load data
+data = con.execute('SELECT * FROM lela2_data').fetchdf()
+
+# Close the connection to free up the database
+con.close()
+
+# Convert the WKB back to geometry
+data['geometry'] = data['geometry_wkb'].apply(lambda wkb_data: wkb.loads(bytes.fromhex(wkb_data)))
+
+# Drop WKB column as we now have geometry
+gdf = gpd.GeoDataFrame(data, geometry='geometry', crs="EPSG:4326")
+
+# Ensure 'Date' column is properly converted to datetime
+gdf['Date'] = pd.to_datetime(gdf['CreationDate'], unit='ms')
 
 # Streamlit app title
 st.title("Lepidium latifolium Distribution")
 
 # Sidebar for date filtering
 st.sidebar.header("Filter by Date")
-date_filter = st.sidebar.date_input("Select Date", value=pd.to_datetime("2023-09-01"))
-
-# Connect to the GIS and fetch feature layer (ArcGIS only for connection)
-gis = GIS()
-feature_service_url_layer = "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_view/FeatureServer/0"
-feature_layer = FeatureLayer(feature_service_url_layer)
-
-# Query data (ArcGIS part is still used here)
-features = feature_layer.query(where="1=1", out_fields="*")
-
-# Extract the attributes and geometries into a pandas DataFrame
-# You must use .get_value() to access fields and geometry
-attributes = [f.attributes for f in features.features]
-geometry = [f.geometry for f in features.features]
-
-# Create the pandas DataFrame from attributes
-data = pd.DataFrame(attributes)
-
-# Add the geometries (x and y) to the dataframe
-data['x'] = [geom['x'] for geom in geometry]
-data['y'] = [geom['y'] for geom in geometry]
-
-# Convert 'CreationDate' to datetime format
-data['Date'] = pd.to_datetime(data['CreationDate'], unit='ms')
-
-# Filter data for date selection (2023-09-01 and after)
-filtered_data = data[data['Date'] >= pd.to_datetime(date_filter)]
-
-# Create geometry column and convert to GeoDataFrame in EPSG:3857 (Web Mercator)
-geometry_points = [Point(xy) for xy in zip(filtered_data['x'], filtered_data['y'])]
-gdf = gpd.GeoDataFrame(filtered_data, geometry=geometry_points, crs="EPSG:3857")
-
-# Convert the GeoDataFrame to EPSG:4326 (latitude/longitude)
-gdf = gdf.to_crs(epsg=4326)
-
+date_filter = pd.to_datetime(st.sidebar.date_input("Start Date", value=pd.to_datetime("2023-09-01")))
 
 # Sidebar - symbology date input
-date_threshold = st.sidebar.date_input("Symbology Date Break: yellow before, red after", pd.to_datetime("2024-09-01"))
-date_threshold = pd.to_datetime(date_threshold)
+date_threshold = pd.to_datetime(st.sidebar.date_input("Symbology Date Break", pd.to_datetime("2024-09-01")))
 
-# Ensure 'CreationDate' is in datetime format
-gdf['CreationDate'] = pd.to_datetime(gdf['CreationDate'], unit='ms')
+# Filter and process the data based on user input
+filtered_data = gdf[gdf['Date'] >= date_filter]
 
-# Filter and sort data
-gdf_sorted = gdf[gdf['geometry'].notnull()].sort_values(by='CreationDate', ascending=False)
+# Extract the latest creation date from the records
+latest_date = filtered_data['Date'].max()
 
-# Filter points before and after the threshold
-gdf_before = gdf_sorted[gdf_sorted['CreationDate'] < date_threshold]
-gdf_after = gdf_sorted[gdf_sorted['CreationDate'] >= date_threshold]
+# Display the latest data update information
+if pd.notnull(latest_date):
+    st.markdown(f"**Last Data Update: {latest_date.strftime('%m/%d/%Y')}**")
+else:
+    st.markdown(f"**Last Data Update: No records available**")
 
-#st.write(gdf[['x', 'y', 'geometry']].head())
+# Sort the data by creation date and filter before/after threshold
+gdf_sorted = filtered_data.sort_values(by='Date', ascending=False)
+gdf_before = gdf_sorted[gdf_sorted['Date'] < date_threshold]
+gdf_after = gdf_sorted[gdf_sorted['Date'] >= date_threshold]
 
-# Create a larger folium map
+# Create a folium map
 m = folium.Map(location=[36.832208, -118.143997], zoom_start=10, width="100%", height="700px")
 
-# Plot red points (after the date)
+# Plot red points (after the date threshold)
 for idx, row in gdf_after.iterrows():
     folium.CircleMarker(
         location=[row['geometry'].y, row['geometry'].x],
-        radius=5,  # Size of the marker
-        color='red',  # Border color
+        radius=5,
+        color='red',
         fill=True,
-        fill_color='red',  # Fill color
+        fill_color='red',
         fill_opacity=0.8,
-        popup=(f"CreationDate: {row['CreationDate']}<br>"
-               f"Species: {row['Species']}<br>"
-               f"Abundance: {row['Abundance']}<br>"
-               f"Notes: {row['Notes']}<br>"),
+        popup=(f"CreationDate: {row['Date']}<br>Species: {row['Species']}<br>Abundance: {row['Abundance']}<br>Notes: {row['Notes']}<br>")
     ).add_to(m)
 
-# Plot yellow points (before the date)
+# Plot yellow points (before the date threshold)
 for idx, row in gdf_before.iterrows():
     folium.CircleMarker(
         location=[row['geometry'].y, row['geometry'].x],
-        radius=5,  # Size of the marker
-        color='yellow',  # Border color
+        radius=5,
+        color='yellow',
         fill=True,
-        fill_color='yellow',  # Fill color
+        fill_color='yellow',
         fill_opacity=0.8,
-        popup=(f"CreationDate: {row['CreationDate']}<br>"
-               f"Species: {row['Species']}<br>"
-               f"Abundance: {row['Abundance']}<br>"
-               f"Notes: {row['Notes']}<br>"),
+        popup=(f"CreationDate: {row['Date']}<br>Species: {row['Species']}<br>Abundance: {row['Abundance']}<br>Notes: {row['Notes']}<br>")
     ).add_to(m)
 
-# Display the map larger
+# Display the map
 folium_static(m)
 
-
-
+# Display the full interactive table below the map
+st.subheader("Observations Table")
+st.dataframe(filtered_data[['Species', 'Date', 'Abundance', 'Notes']])
