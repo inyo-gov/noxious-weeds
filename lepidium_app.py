@@ -7,7 +7,7 @@ import folium
 from streamlit_folium import folium_static
 
 # Connect to DuckDB
-con = duckdb.connect('noxious_weeds.duckdb')
+con = duckdb.connect('noxious_weeds.duckdb', read_only=True)
 
 # Load data
 data = con.execute('SELECT * FROM lela2_data').fetchdf()
