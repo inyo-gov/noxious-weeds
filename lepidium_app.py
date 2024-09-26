@@ -5,15 +5,34 @@ from shapely import wkb
 import pandas as pd
 import folium
 from streamlit_folium import folium_static
+import os
+
+# Access the token from Streamlit Secrets
+#motherduck_token = st.secrets["motherduck"]["token"]
+
+# Set the token as an environment variable
+#os.environ['motherduck_token'] = motherduck_token
+
+# Fetch the MotherDuck token from Streamlit secrets
+os.environ['motherduck_token'] = st.secrets["motherduck_token"]
+
 
 # Connect to DuckDB
-con = duckdb.connect('noxious_weeds.duckdb', read_only=True)
+#con = duckdb.connect('noxious_weeds.duckdb', read_only=True)
 
-# Load data
-data = con.execute('SELECT * FROM lela2_data').fetchdf()
+# Connect to MotherDuck in read-only mode
+con_cloud = duckdb.connect('md:_share/duckdb_share_092624/79ce19e5-1e8a-4205-838a-84260250166f', read_only=True)
+# Load data from MotherDuck
+data = con_cloud.execute('SELECT * FROM lela2_data').fetchdf()
 
 # Close the connection to free up the database
-con.close()
+con_cloud.close()
+
+# Load data
+#data = con.execute('SELECT * FROM lela2_data').fetchdf()
+
+# Close the connection to free up the database
+#con.close()
 
 # Convert the WKB back to geometry
 data['geometry'] = data['geometry_wkb'].apply(lambda wkb_data: wkb.loads(bytes.fromhex(wkb_data)))
