@@ -1,0 +1,634 @@
+---
+title: "Perennial Pepperweed Mapping"
+subtitle: "Noxious Weeds Monitoring 2025-2026 LORP Workplan"
+tbl-cap-location: top   
+affiliation: "Inyo County Water Department"
+date: today
+date-modified: today
+citation:
+  type: report
+  container-title: "Data Report"
+  publisher: "Inyo County Water Department"
+  issued: today
+  url: https://github.com/inyo-gov/noxious-weeds
+google-scholar: true
+params:
+  current_year: 2025
+  start_year: 2018
+format: 
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+    css: styles.css
+  docx:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    reference-doc: custom-reference.docx
+execute:
+  echo: false
+  warning: false
+  message: false
+prefer-html: true
+---
+
+```{r setup}
+#| message: false
+#| warning: false
+library(sf)
+library(dplyr)
+library(tidyr)
+library(leaflet)
+library(leaflet.extras2)
+library(lubridate)
+library(htmltools)
+library(knitr)
+library(DT)
+library(ggplot2)
+library(scales)
+library(httr)
+```
+
+# Summary
+
+This data report covers the monitoring of **Lepidium latifolium** (perennial pepperweed) in the Lower Owens River Project (LORP) area from `r params$start_year` to `r params$current_year`. The data is sourced from the [ArcGIS Online Noxious Weeds 2025 feature service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0) and provides updated spatial occurrence as of `r params$current_year`. 
+
+> "Perennial pepperweed (Lepidium latifolium), an introduced plant from southeastern Europe and Asia, is invasive throughout the western United States. It can establish in a wide range of environments and is a common problem in flood plains, irrigation structures, pastures, wetlands, riparian areas, roadsides, and residential site. Recent surveys identify perennial pepperweed as a weed problem in nearly all of California, and both the California Department of Food and Agriculture (CDFA) and California Invasive Plant Council (Cal-IPC) list it as a noxious weed of great ecological concern." - [UC IPM](https://ipm.ucanr.edu/home-and-landscape/perennial-pepperweed/#gsc.tab=0)
+
+**California Invasive Plant Council (Cal-IPC) Rating: High**  
+High – These species have severe ecological impacts on physical processes, plant and animal communities, and vegetation structure. Their reproductive biology and other attributes are conducive to moderate to high rates of dispersal and establishment. Most are widely distributed ecologically.
+
+**California Department of Food and Agriculture (CDFA) Rating: -***  
+* – included in the CCR Section 4500 list of California State Noxious Weeds.
+
+```{r data-loading}
+#| message: false
+#| warning: false
+
+# ArcGIS Feature Service URL
+base_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0/query?"
+
+# Query parameters for all data
+query_params <- paste0(
+  "where=1=1",
+  "&outFields=*",
+  "&f=geojson",
+  "&outSR=4326"
+)
+
+# Construct full query URL
+query_url <- paste0(base_url, query_params)
+
+# Load data from ArcGIS feature service
+pepper_data <- st_read(query_url, quiet = TRUE)
+
+# Process dates - convert Unix timestamps to dates
+pepper_data <- pepper_data %>%
+  mutate(
+    Date_Observed = as.POSIXct(Date/1000, origin='1970-01-01'),
+    Date_Created = as.POSIXct(CreationDate/1000, origin='1970-01-01'),
+    Year_Observed = year(Date_Observed),
+    Year_Created = year(Date_Created),
+    # Use creation year as fallback when observation year is missing
+    Year_Display = ifelse(is.na(Year_Observed), Year_Created, Year_Observed),
+    Date_Display = as.POSIXct(ifelse(is.na(Date_Observed), as.numeric(Date_Created), as.numeric(Date_Observed)), origin='1970-01-01')
+  )
+
+# Filter to LORP area based on northernmost current year data point
+pepper_current_year_for_bounds <- pepper_data %>%
+  filter(Year_Display == params$current_year)
+
+if(nrow(pepper_current_year_for_bounds) > 0) {
+  # Get the northernmost latitude from current year data
+  northernmost_lat <- max(st_coordinates(pepper_current_year_for_bounds)[,2])
+  
+  # Filter all data to LORP area (south of northernmost current year point)
+  pepper_data <- pepper_data %>%
+    filter(st_coordinates(.)[,2] <= northernmost_lat)
+  
+  cat("LORP Area Filter Applied:\n")
+  cat("- Northernmost", params$current_year, "point latitude:", round(northernmost_lat, 4), "°N\n")
+  cat("- Filtered dataset now contains", nrow(pepper_data), "observations\n")
+} else {
+  cat("No", params$current_year, "data found for LORP area filtering\n")
+}
+
+# Include all records (no year filtering)
+# Separate data by display year (observation year with creation year fallback)
+pepper_2018 <- pepper_data %>% filter(Year_Display == 2018)
+pepper_2019 <- pepper_data %>% filter(Year_Display == 2019)
+pepper_2020 <- pepper_data %>% filter(Year_Display == 2020)
+pepper_2021 <- pepper_data %>% filter(Year_Display == 2021)
+pepper_2022 <- pepper_data %>% filter(Year_Display == 2022)
+pepper_2023 <- pepper_data %>% filter(Year_Display == 2023)
+pepper_2024 <- pepper_data %>% filter(Year_Display == 2024)
+pepper_2025 <- pepper_data %>% filter(Year_Display == 2025)
+
+# Create recent vs historical comparison
+pepper_recent <- pepper_data %>% filter(Year_Display >= 2022)
+pepper_historical <- pepper_data %>% filter(Year_Display >= 2018 & Year_Display <= 2021)
+
+# Summary statistics for all years (using display year with fallback)
+summary_stats <- pepper_data %>%
+  filter(!is.na(Year_Display)) %>%
+  group_by(Year_Display) %>%
+  summarise(
+    Total_Observations = n(),
+    Avg_Abundance = round(mean(Abundance, na.rm = TRUE), 1),
+    Avg_Height = round(mean(Height, na.rm = TRUE), 1),
+    Max_Abundance = max(Abundance, na.rm = TRUE),
+    Records_With_Obs_Date = sum(!is.na(Year_Observed)),
+    Records_With_Creation_Date_Only = sum(is.na(Year_Observed) & !is.na(Year_Created)),
+    .groups = 'drop'
+  ) %>%
+  arrange(Year_Display)
+```
+
+## Data Overview
+
+The dataset includes `r nrow(pepper_data)` total observations across `r length(unique(pepper_data$Year_Display[!is.na(pepper_data$Year_Display)]))` years, with peak survey activity in `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` (`r max(table(pepper_data$Year_Display, useNA='ifany'))` records).
+
+## Key Findings Summary
+
+- **Total Observations**: `r nrow(pepper_data)` records across all years (2018-2025)
+- **Peak Survey Year**: `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` with `r max(table(pepper_data$Year_Display, useNA='ifany'))` observations
+- **Recent Activity**: `r nrow(pepper_recent)` observations in 2022-2025
+- **Historical Baseline**: `r nrow(pepper_historical)` observations in 2018-2021
+- **Data Coverage**: `r round((nrow(pepper_data) - sum(is.na(pepper_data$Year_Display))) / nrow(pepper_data) * 100, 1)`% of records have complete date information (using observation date with creation date fallback)
+
+# Interactive Map Comparison
+
+The following interactive map shows pepperweed populations across all years (`r params$start_year`-`r params$current_year`). Use the layer controls in the top-right corner to toggle between different years. The map includes all `r nrow(pepper_data)` documented observations, with feature creation dates used when observation dates are unavailable.
+
+<div class="download-section">
+<h3>Data Downloads</h3>
+<div class="download-links">
+<a href="pepperweed_data.geojson">📊 Download GeoJSON</a>
+<a href="pepperweed_data.kml">🌍 Download KML</a>
+</div>
+<p>Complete dataset with all `r nrow(pepper_data)` pepperweed observations</p>
+</div>
+
+```{r generate-geojson}
+#| message: false
+#| warning: false
+#| echo: false
+#| results: hide
+
+# Generate GeoJSON file for download
+st_write(pepper_data, "pepperweed_data.geojson", driver = "GeoJSON", delete_dsn = TRUE, quiet = TRUE)
+
+# Generate KML file for Google Earth (will be zipped to KMZ)
+st_write(pepper_data, "pepperweed_data.kml", driver = "KML", delete_dsn = TRUE, quiet = TRUE)
+
+# Calculate spatial extent
+bbox <- st_bbox(pepper_data)
+extent_info <- list(
+  north = bbox$ymax,
+  south = bbox$ymin, 
+  east = bbox$xmax,
+  west = bbox$xmin,
+  center_lat = (bbox$ymax + bbox$ymin) / 2,
+  center_lon = (bbox$xmax + bbox$xmin) / 2
+)
+```
+
+<div class="spatial-extent">
+<h4>Study Area Boundaries</h4>
+<ul>
+<li><strong>North</strong>: `r round(extent_info$north, 4)`°N</li>
+<li><strong>South</strong>: `r round(extent_info$south, 4)`°N</li>
+<li><strong>East</strong>: `r round(extent_info$east, 4)`°W</li>
+<li><strong>West</strong>: `r round(extent_info$west, 4)`°W</li>
+<li><strong>Center</strong>: `r round(extent_info$center_lat, 4)`°N, `r round(extent_info$center_lon, 4)`°W</li>
+</ul>
+</div>
+
+```{r interactive-map}
+#| message: false
+#| warning: false
+
+# Create comprehensive map with all years
+combined_map <- leaflet(pepper_data) %>%
+  # Standard basemaps
+  addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
+  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") %>%
+  # Add 2018 markers
+  addCircleMarkers(
+    data = pepper_2018,
+    radius = 5,
+    color = "black",
+    fillColor = "black",
+    fillOpacity = 0.7,
+    weight = 2,
+      popup = ~paste0(
+        "<b>2018 Data</b><br>",
+        "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+        "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+        "Species: ", Species, "<br>",
+        "Abundance: ", Abundance, "<br>",
+        "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+        "Notes: ", ifelse(is.na(Notes), "None", Notes)
+      ),
+    group = "2018 Data"
+  ) %>%
+  # Add 2019 markers
+  addCircleMarkers(
+    data = pepper_2019,
+    radius = 5,
+    color = "darkred",
+    fillColor = "darkred",
+    fillOpacity = 0.7,
+    weight = 2,
+    popup = ~paste0(
+      "<b>2019 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2019 Data"
+  ) %>%
+  # Add 2020 markers
+  addCircleMarkers(
+    data = pepper_2020,
+    radius = 5,
+    color = "red",
+    fillColor = "red",
+    fillOpacity = 0.7,
+    weight = 2,
+    popup = ~paste0(
+      "<b>2020 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2020 Data"
+  ) %>%
+  # Add 2021 markers
+  addCircleMarkers(
+    data = pepper_2021,
+    radius = 5,
+    color = "yellow",
+    fillColor = "yellow",
+    fillOpacity = 0.7,
+    weight = 2,
+    popup = ~paste0(
+      "<b>2021 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2021 Data"
+  ) %>%
+  # Add 2022 markers
+  addCircleMarkers(
+    data = pepper_2022,
+    radius = 5,
+    color = "orange",
+    fillColor = "orange",
+    fillOpacity = 0.7,
+    weight = 2,
+    popup = ~paste0(
+      "<b>2022 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2022 Data"
+  ) %>%
+  # Add 2023 markers
+  addCircleMarkers(
+    data = pepper_2023,
+    radius = 5,
+    color = "green",
+    fillColor = "green",
+    fillOpacity = 0.7,
+    weight = 2,
+    popup = ~paste0(
+      "<b>2023 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2023 Data"
+  ) %>%
+  # Add 2024 markers
+  addCircleMarkers(
+    data = pepper_2024,
+    radius = 5,
+    color = "blue",
+    fillColor = "blue",
+    fillOpacity = 0.8,
+    weight = 3,
+    popup = ~paste0(
+      "<b>2024 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2024 Data"
+  ) %>%
+  # Add 2025 markers
+  addCircleMarkers(
+    data = pepper_2025,
+    radius = 5,
+    color = "purple",
+    fillColor = "purple",
+    fillOpacity = 0.9,
+    weight = 3,
+    popup = ~paste0(
+      "<b>2025 Data</b><br>",
+      "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
+      "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
+      "Species: ", Species, "<br>",
+      "Abundance: ", Abundance, "<br>",
+      "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      "Notes: ", ifelse(is.na(Notes), "None", Notes)
+    ),
+    group = "2025 Data"
+  ) %>%
+  addLayersControl(
+    baseGroups = c("World Imagery", "OpenStreetMap"),
+    overlayGroups = c("2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data", "2023 Data", "2024 Data", "2025 Data"),
+    options = layersControlOptions(collapsed = FALSE)
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    colors = c("black", "darkred", "red", "yellow", "orange", "green", "blue", "purple"),
+    labels = c("2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"),
+    title = "Pepperweed Distribution by Year"
+  )
+
+combined_map
+```
+
+## `r params$current_year` Distribution - plants per site estimated from field observations
+
+The following histogram shows the distribution of abundance values for all pepperweed point locations documented in `r params$current_year`:
+
+```{r abundance-histogram}
+#| message: false
+#| warning: false
+
+# Filter for current year data only
+pepper_current_year <- pepper_data %>%
+  filter(Year_Display == params$current_year)
+
+# Create abundance histogram
+if(nrow(pepper_current_year) > 0) {
+  # Create abundance bins (preserve all bins, exclude empty ones)
+  abundance_data <- pepper_current_year %>%
+    filter(!is.na(Abundance)) %>%
+    mutate(
+      Abundance_Bin = case_when(
+        Abundance <= 10 ~ "1-10",
+        Abundance <= 25 ~ "11-25", 
+        Abundance <= 50 ~ "26-50",
+        Abundance <= 100 ~ "51-100",
+        TRUE ~ ">100"
+      ),
+      Abundance_Bin = factor(Abundance_Bin,
+                            levels = c("1-10", "11-25", "26-50", "51-100", ">100"),
+                            ordered = TRUE)
+    )
+  
+  # Only include bins that have data
+  abundance_counts <- abundance_data %>%
+    count(Abundance_Bin) %>%
+    filter(n > 0)
+  
+  # Create bar chart with only populated bins
+  hist_plot <- ggplot(abundance_counts, aes(x = Abundance_Bin, y = n)) +
+    geom_bar(stat = "identity", fill = "#2E86AB", color = "white", alpha = 0.8, width = 0.7) +
+    labs(
+      title = paste("Distribution of Pepperweed Abundance in", params$current_year),
+      subtitle = paste("Total sites:", nrow(pepper_current_year)),
+      x = "Abundance Range (plants)",
+      y = "Number of Sites"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 16, face = "bold", color = "#2E86AB"),
+      plot.subtitle = element_text(size = 14, color = "#666666"),
+      axis.title = element_text(size = 12),
+      axis.text.x = element_text(angle = 45, hjust = 1),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.x = element_blank()
+    ) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 8))
+  
+  print(hist_plot)
+  
+  # Management categories
+  small_pops <- sum(pepper_current_year$Abundance <= 100, na.rm = TRUE)
+  large_pops <- sum(pepper_current_year$Abundance > 100, na.rm = TRUE)
+  
+  cat("###", params$current_year, "Site Distribution\n")
+  cat("- **Total Sites**:", nrow(pepper_current_year), "\n")
+  cat("- **Small Sites (≤ 100 plants)**:", small_pops, "sites (", round(small_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  cat("- **Large Sites (> 100 plants)**:", large_pops, "sites (", round(large_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  
+  # Detailed bin counts
+  cat("\n### Detailed Abundance Distribution\n")
+  for(i in 1:nrow(abundance_counts)) {
+    bin_name <- abundance_counts$Abundance_Bin[i]
+    bin_count <- abundance_counts$n[i]
+    cat("- **", bin_name, " plants**: ", bin_count, " sites\n", sep = "")
+  }
+  
+  # Range information
+  cat("\n### Abundance Range\n")
+  cat("- **Minimum**:", min(pepper_current_year$Abundance, na.rm = TRUE), "plants\n")
+  cat("- **Maximum**:", max(pepper_current_year$Abundance, na.rm = TRUE), "plants\n")
+} else {
+  cat("No", params$current_year, "data available for abundance analysis.\n")
+}
+```
+
+The interactive map above provides the primary visualization of pepperweed distribution patterns. 
+
+
+### Recent Sites
+```{r new-sites}
+#| message: false
+#| warning: false
+
+# Show all recent sites (2024-2025) - prioritize small sites for early intervention
+recent_sites <- pepper_data %>%
+  filter(Year_Display >= 2024) %>%
+  select(Date_Display, Abundance, Height, Notes, Year_Display) %>%
+  # Sort by abundance (smallest first) to prioritize satellite sites
+  arrange(Abundance, desc(Year_Display))
+
+if(nrow(recent_sites) > 0) {
+  datatable(recent_sites,
+            caption = "Recent Pepperweed Sites (2024-2025) - Prioritize Small Sites for Early Intervention",
+            options = list(pageLength = 15, scrollX = TRUE))
+} else {
+  cat("No recent sites found.")
+}
+```
+
+
+
+
+# Data Quality and Limitations
+
+## Data Sources
+- **Primary Source**: [ArcGIS Online Noxious Weeds 2025 Feature Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
+
+- **Last Updated**: `r format(as.POSIXct(max(pepper_data$CreationDate, na.rm = TRUE)/1000, origin='1970-01-01'), "%B %d, %Y")`
+- **Coordinate System**: WGS84 (EPSG:4326)
+
+## Limitations
+- Data represents documented observations only
+- Population estimates may vary based on survey timing and conditions
+- Some areas may be under-sampled due to access constraints
+- Abundance categories are based on field estimates
+
+# Field Documentation
+
+```{r field-images}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+# Function to check if a feature has attachments
+check_feature_attachments <- function(objectid) {
+  base_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0"
+  attachments_url <- paste0(base_url, "/", objectid, "/attachments?f=json")
+  
+  response <- GET(attachments_url)
+  if(response$status_code == 200) {
+    attachments_data <- content(response, 'parsed')
+    return(length(attachments_data$attachmentInfos) > 0)
+  }
+  return(FALSE)
+}
+
+# Function to get attachments for a feature
+get_feature_attachments <- function(objectid) {
+  base_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0"
+  attachments_url <- paste0(base_url, "/", objectid, "/attachments?f=json")
+  
+  response <- GET(attachments_url)
+  if(response$status_code == 200) {
+    attachments_data <- content(response, 'parsed')
+    return(attachments_data$attachmentInfos)
+  } else {
+    return(NULL)
+  }
+}
+
+# Function to display an image from attachment
+display_attachment_image <- function(objectid, attachment_id, width = 500) {
+  base_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0"
+  image_url <- paste0(base_url, "/", objectid, "/attachments/", attachment_id)
+  
+  # Create HTML for image display
+  html_content <- paste0(
+    '<div style="display: inline-block; margin: 15px; text-align: center;">',
+    '<img src="', image_url, '" style="max-width: ', width, 'px; height: auto; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">',
+    '</div>'
+  )
+  
+  # Use cat to output HTML directly
+  cat(html_content)
+}
+
+# Find features with attachments (check more features for up to 40 photos)
+cat("## Field Documentation Images\n")
+cat("Pepperweed observations with field photos:\n\n")
+
+# Check which features have attachments - look at more features to get up to 40 photos
+features_to_check <- pepper_data %>%
+  filter(Year_Display >= params$current_year - 2) %>%  # Include last 2 years
+  arrange(desc(Year_Display), desc(Abundance)) %>%
+  head(100)  # Check more features to find ones with attachments
+
+features_with_attachments <- c()
+for(i in 1:nrow(features_to_check)) {
+  objectid <- features_to_check$OBJECTID[i]
+  if(check_feature_attachments(objectid)) {
+    features_with_attachments <- c(features_with_attachments, objectid)
+  }
+}
+
+# Display images for features that have attachments (up to 40)
+images_displayed <- 0
+if(length(features_with_attachments) > 0) {
+  for(objectid in features_with_attachments[1:min(40, length(features_with_attachments))]) {
+    # Get feature data
+    feature <- pepper_data[pepper_data$OBJECTID == objectid,]
+    
+    # Get attachments
+    attachments <- get_feature_attachments(objectid)
+    
+    if(!is.null(attachments) && length(attachments) > 0) {
+      # Get the first image attachment
+      first_attachment <- attachments[[1]]
+      
+      # Display image first
+      display_attachment_image(objectid, first_attachment$id)
+      
+      # Display metadata below the image
+      cat("<div style='text-align: center; margin-bottom: 30px;'>")
+      cat("<p><strong>Feature ID:</strong>", objectid, "| <strong>Date:</strong>", format(feature$Date_Display, "%Y-%m-%d"), "| <strong>Abundance:</strong>", feature$Abundance, "plants</p>")
+      
+      # Include Notes if available
+      if(!is.na(feature$Notes) && feature$Notes != "") {
+        cat("<p><strong>Notes:</strong>", feature$Notes, "</p>")
+      }
+      
+      cat("</div>")
+      
+      images_displayed <- images_displayed + 1
+    }
+  }
+}
+
+if(images_displayed == 0) {
+  cat("No field documentation images available for recent observations.\n")
+} else {
+  cat("\n*Field documentation images provide visual confirmation of pepperweed sites and help verify site characteristics.*\n")
+}
+```
+
+# Conclusion
+
+The `r params$start_year`-`r params$current_year` data reveals expanding pepperweed distribution within the LORP area. The interactive mapping tool provides land managers with a visualization tool for identifying and prioritizing treatment areas over time.
+
+This report will be updated as new data are added to the live feature service. The data source is available at: [ArcGIS REST Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
+
+## Data Disclaimer
+
+The data presented in this report are collected for monitoring and management purposes by the Inyo County Water Department. While every effort is made to ensure accuracy, field conditions, survey timing, and observer experience may affect data quality. Users should verify critical information independently before making management decisions.
+
+---
+
+**Inyo County Water Department**  
+© 2025 Inyo County, California. All rights reserved.
+
+*This analysis is automatically updated when new data is added to the ArcGIS feature service.*

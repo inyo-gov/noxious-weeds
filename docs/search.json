@@ -1,0 +1,86 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "",
+    "text": "This data report covers the monitoring of Lepidium latifolium (perennial pepperweed) in the Lower Owens River Project (LORP) area from 2018 to 2025. The data is sourced from the ArcGIS Online Noxious Weeds 2025 feature service and provides updated spatial occurrence as of 2025.\n\n“Perennial pepperweed (Lepidium latifolium), an introduced plant from southeastern Europe and Asia, is invasive throughout the western United States. It can establish in a wide range of environments and is a common problem in flood plains, irrigation structures, pastures, wetlands, riparian areas, roadsides, and residential site. Recent surveys identify perennial pepperweed as a weed problem in nearly all of California, and both the California Department of Food and Agriculture (CDFA) and California Invasive Plant Council (Cal-IPC) list it as a noxious weed of great ecological concern.” - UC IPM\n\nCalifornia Invasive Plant Council (Cal-IPC) Rating: High\nHigh – These species have severe ecological impacts on physical processes, plant and animal communities, and vegetation structure. Their reproductive biology and other attributes are conducive to moderate to high rates of dispersal and establishment. Most are widely distributed ecologically.\nCalifornia Department of Food and Agriculture (CDFA) Rating: -*\n* – included in the CCR Section 4500 list of California State Noxious Weeds.\n\n\nLORP Area Filter Applied:\n- Northernmost 2025 point latitude: 36.9747 °N\n- Filtered dataset now contains 1647 observations\n\n\n\n\nThe dataset includes 1647 total observations across 8 years, with peak survey activity in 2025 (426 records).\n\n\n\n\nTotal Observations: 1647 records across all years (2018-2025)\nPeak Survey Year: 2025 with 426 observations\nRecent Activity: 852 observations in 2022-2025\nHistorical Baseline: 795 observations in 2018-2021\nData Coverage: 100% of records have complete date information (using observation date with creation date fallback)"
+  },
+  {
+    "objectID": "index.html#data-overview",
+    "href": "index.html#data-overview",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "",
+    "text": "The dataset includes 1647 total observations across 8 years, with peak survey activity in 2025 (426 records)."
+  },
+  {
+    "objectID": "index.html#key-findings-summary",
+    "href": "index.html#key-findings-summary",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "",
+    "text": "Total Observations: 1647 records across all years (2018-2025)\nPeak Survey Year: 2025 with 426 observations\nRecent Activity: 852 observations in 2022-2025\nHistorical Baseline: 795 observations in 2018-2021\nData Coverage: 100% of records have complete date information (using observation date with creation date fallback)"
+  },
+  {
+    "objectID": "index.html#data-sources",
+    "href": "index.html#data-sources",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "Data Sources",
+    "text": "Data Sources\n\nPrimary Source: ArcGIS Online Noxious Weeds 2025 Feature Service\nLast Updated: August 11, 2025\nCoordinate System: WGS84 (EPSG:4326)"
+  },
+  {
+    "objectID": "index.html#limitations",
+    "href": "index.html#limitations",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "Limitations",
+    "text": "Limitations\n\nData represents documented observations only\nPopulation estimates may vary based on survey timing and conditions\nSome areas may be under-sampled due to access constraints\nAbundance categories are based on field estimates"
+  },
+  {
+    "objectID": "index.html#spatial-extent",
+    "href": "index.html#spatial-extent",
+    "title": "Pepperweed Populations LORP 2018–2024",
+    "section": "Spatial Extent",
+    "text": "Spatial Extent\nStudy Area Boundaries: - North: 37.4116°N - South: 36.5478°N\n- East: -117.981°W - West: -118.3826°W - Center: 36.9797°N, -118.1818°W\n\n\n\n\n\n\nThe interactive map above provides the primary visualization of pepperweed distribution patterns. The following analysis focuses on management priorities based on population characteristics and spatial patterns.\n\nRecent Sites Requiring Attention\n\n\n\n\n\n\n\n\nManagement Responsibility\nTreatment implementation is the responsibility of: - LADWP (Los Angeles Department of Water and Power) - Inyo/Mono County Agricultural Commissioner’s Office\nThis analysis provides spatial data to inform management decisions."
+  },
+  {
+    "objectID": "index.html#population-abundance-analysis",
+    "href": "index.html#population-abundance-analysis",
+    "title": "Perennial Pepperweed (Lepidium latifolium) Distribution in the Lower Owens River Project Area",
+    "section": "2025 Population Abundance Analysis",
+    "text": "2025 Population Abundance Analysis\nThe following histogram shows the distribution of abundance values for all pepperweed populations documented in 2025:\n\n\n\n\n\n\n\n\n\n### 2025 Population Distribution\n- **Total Populations**: 426 \n- **Small Populations (&lt; 100 plants)**: 192 populations ( 45.1 %)\n- **Medium Populations (100-200 plants)**: 232 populations ( 54.5 %)\n- **Large Populations (&gt; 200 plants)**: 0 populations ( 0 %)\n\n### Detailed Abundance Distribution\n- **1 plants**: 57 populations\n- **2 plants**: 135 populations\n- **4 plants**: 133 populations\n- **5 plants**: 99 populations\n\n### Abundance Range\n- **Minimum**: 5 plants\n- **Maximum**: 200 plants\n\n\nThe interactive map above provides the primary visualization of pepperweed distribution patterns.\n\nRecent Sites"
+  },
+  {
+    "objectID": "index.html#field-documentation",
+    "href": "index.html#field-documentation",
+    "title": "Perennial Pepperweed (Lepidium latifolium) Distribution in the Lower Owens River Project Area",
+    "section": "Field Documentation",
+    "text": "Field Documentation\n\nField Documentation Images\nRecent pepperweed observations with field photos:\nFeature ID: 1369 | Date: 2025-04-02 | Abundance: 200 plants\n\nPhoto 1.jpg\n\nFeature ID: 1370 | Date: 2025-04-02 | Abundance: 200 plants\n\nPhoto 1.jpg\n\nFeature ID: 1371 | Date: 2025-05-14 | Abundance: 200 plants\n\nPhoto 1.jpg\n\nField documentation images provide visual confirmation of pepperweed populations and help verify population characteristics.\n\n\nRecent Sites"
+  },
+  {
+    "objectID": "index.html#field-documentation-images",
+    "href": "index.html#field-documentation-images",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "Field Documentation Images",
+    "text": "Field Documentation Images\nPepperweed observations with field photos:\n\n\n\n\n\nFeature ID: 1369 | Date: 2025-04-02 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1370 | Date: 2025-04-02 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1371 | Date: 2025-05-14 | Abundance: 200 plants\n\n\nNotes: Dense vegetative cluster around low ditch\n\n\n\n\n\n\n\nFeature ID: 1398 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: Among the tule next to the water, north of the willow\n\n\n\n\n\n\n\nFeature ID: 1401 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: Among tule next to water, south of willow\n\n\n\n\n\n\n\nFeature ID: 1465 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: W BAHY + SCAC\n\n\n\n\n\n\n\nFeature ID: 1467 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: 10-15m south of rivers edge\n\n\n\n\n\n\n\nFeature ID: 1473 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: 8-10m from waters edge; 12-15m long stretch of LELA bordering large TARA\n\n\n\n\n\n\n\nFeature ID: 1475 | Date: 2025-07-30 | Abundance: 200 plants\n\n\nNotes: 20m long stretch 2-5m from river, dense\n\n\n\n\n\n\n\nFeature ID: 1482 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1485 | Date: 2025-07-31 | Abundance: 200 plants\n\n\nNotes: W/ ASFA\n\n\n\n\n\n\n\nFeature ID: 1490 | Date: 2025-07-31 | Abundance: 200 plants\n\n\nNotes: W/ dead BAHY\n\n\n\n\n\n\n\nFeature ID: 1495 | Date: 2025-07-31 | Abundance: 200 plants\n\n\nNotes: W) ASFA ELTR TYPHA\n\n\n\n\n\n\n\nFeature ID: 1501 | Date: 2025-07-31 | Abundance: 200 plants\n\n\nNotes: W/ ASFA\n\n\n\n\n\n\n\nFeature ID: 1506 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1507 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1508 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1510 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1515 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1516 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1527 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1529 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1535 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1538 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1545 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1547 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1563 | Date: 2025-07-31 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1583 | Date: 2025-08-04 | Abundance: 200 plants\n\n\nNotes: Along bank, flowering\n\n\n\n\n\n\n\nFeature ID: 1598 | Date: 2025-08-04 | Abundance: 200 plants\n\n\nNotes: Several large patches around this point\n\n\n\n\n\n\n\nFeature ID: 1650 | Date: 2025-08-04 | Abundance: 200 plants\n\n\n\n\n\n\n\nFeature ID: 1367 | Date: 2025-04-01 | Abundance: 100 plants\n\n\nField documentation images provide visual confirmation of pepperweed sites and help verify site characteristics."
+  },
+  {
+    "objectID": "index.html#distribution---plants-per-site-estimated-from-field-observations",
+    "href": "index.html#distribution---plants-per-site-estimated-from-field-observations",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "2025 Distribution - plants per site estimated from field observations",
+    "text": "2025 Distribution - plants per site estimated from field observations\nThe following histogram shows the distribution of abundance values for all pepperweed point locations documented in 2025:\n\n\n\n\n\n\n\n\n\n### 2025 Site Distribution\n- **Total Sites**: 426 \n- **Small Sites (≤ 100 plants)**: 325 sites ( 76.3 %)\n- **Large Sites (&gt; 100 plants)**: 99 sites ( 23.2 %)\n\n### Detailed Abundance Distribution\n- **1 plants**: 57 sites\n- **2 plants**: 135 sites\n- **4 plants**: 133 sites\n- **5 plants**: 99 sites\n\n### Abundance Range\n- **Minimum**: 5 plants\n- **Maximum**: 200 plants\n\n\nThe interactive map above provides the primary visualization of pepperweed distribution patterns.\n\nRecent Sites"
+  },
+  {
+    "objectID": "index.html#cal-ipc-and-cdfa-ratings",
+    "href": "index.html#cal-ipc-and-cdfa-ratings",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "",
+    "text": "California Invasive Plant Council (Cal-IPC) Rating: High High – These species have severe ecological impacts on physical processes, plant and animal communities, and vegetation structure. Their reproductive biology and other attributes are conducive to moderate to high rates of dispersal and establishment. Most are widely distributed ecologically.\nCalifornia Department of Food and Agriculture (CDFA) Rating: -  – included in the CCR Section 4500 list of California State Noxious Weeds.\n\n\nLORP Area Filter Applied:\n- Northernmost 2025 point latitude: 36.9747 °N\n- Filtered dataset now contains 1647 observations"
+  },
+  {
+    "objectID": "index.html#data-disclaimer",
+    "href": "index.html#data-disclaimer",
+    "title": "Perennial Pepperweed Mapping",
+    "section": "Data Disclaimer",
+    "text": "Data Disclaimer\nThe data presented in this report are collected for monitoring and management purposes by the Inyo County Water Department. While every effort is made to ensure accuracy, field conditions, survey timing, and observer experience may affect data quality. Users should verify critical information independently before making management decisions.\n\nInyo County Water Department\n© 2025 Inyo County, California. All rights reserved.\nThis analysis is automatically updated when new data is added to the ArcGIS feature service."
+  }
+]

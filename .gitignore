@@ -65,3 +65,5 @@ s2/
 
 # Visual Studio Code workspace and settings (if relevant)
 .vscode/
+
+/.quarto/

@@ -1,0 +1,27 @@
+# R package requirements for Pepperweed Analysis Quarto Document
+# Install these packages in R before rendering the document
+
+# Core spatial and data manipulation
+sf>=1.0.0
+dplyr>=1.0.0
+lubridate>=1.8.0
+tidyr>=1.2.0
+
+# Interactive mapping
+leaflet>=2.1.0
+leaflet.extras2>=0.1.0
+
+# Data tables and visualization
+DT>=0.20
+htmltools>=0.5.0
+knitr>=1.40
+ggplot2>=3.3.0
+plotly>=4.10.0
+
+# Word document generation
+officer>=0.4.0
+flextable>=0.8.0
+webshot2>=0.1.0
+
+# Quarto dependencies
+quarto>=1.3.0
