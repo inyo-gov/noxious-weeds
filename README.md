@@ -128,18 +128,18 @@ The analysis automatically filters data to focus on the LORP study area by:
 - Filtering all data to points south of this latitude
 - Ensuring analysis focuses on the relevant geographic extent
 
-### 2. Population Abundance Analysis
-- Histogram showing distribution of population sizes
-- Statistics for small (<100), medium (100-200), and large (>200) populations
-- Focus on identifying new satellite populations
+### 2. Site Abundance Analysis
+- Histogram showing distribution of site sizes
+- Statistics for small (≤100) and large (>100) sites
+- Focus on identifying new satellite sites
 
 ### 3. Priority Site Identification
 - Recent high-priority sites (2024-2025)
-- Sorted by abundance to prioritize small, new populations
+- Sorted by abundance to prioritize small, new sites
 - Management recommendations for containment
 
 ### 4. Temporal Analysis
-- Year-over-year population changes
+- Year-over-year site changes
 - Identification of new sites requiring attention
 - Long-term monitoring trends (2018-2025)
 
