@@ -135,8 +135,6 @@ The analysis automatically filters data to focus on the LORP study area by:
 
 ### 3. Priority Site Identification
 - Recent high-priority sites (2024-2025)
-- Sorted by abundance to prioritize small, new sites
-- Management recommendations for containment
 
 ### 4. Temporal Analysis
 - Year-over-year site changes
@@ -159,7 +157,6 @@ The report uses Quarto parameters for easy customization:
 
 ### Styling
 - Custom CSS in `styles.css`
-- Matches Inyo County branding
 - Responsive design for various screen sizes
 
 ## Deployment

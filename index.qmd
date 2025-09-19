@@ -212,6 +212,35 @@ extent_info <- list(
 #| message: false
 #| warning: false
 
+# Add reach information to pepper_data if available
+if(exists("pepper_data_with_reaches")) {
+  # Merge reach information back to main dataset
+  pepper_data <- pepper_data %>%
+    left_join(
+      pepper_data_with_reaches %>% 
+        st_drop_geometry() %>% 
+        select(OBJECTID, Name),
+      by = "OBJECTID"
+    )
+}
+
+# Load water quality stations as reference points
+wq_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/lorp_wq_view/FeatureServer/0/query?where=1=1&outFields=*&f=geojson&outSR=4326"
+wq_stations <- st_read(wq_url, quiet = TRUE)
+
+# Load river reaches for labeling (if not already loaded)
+if(!exists("river_reaches")) {
+  reach_url <- "https://inyocounty.maps.arcgis.com/sharing/rest/content/items/90e5870bd5914a928bd97b023f07b807/data"
+  river_reaches <- st_read(reach_url, quiet = TRUE)
+  river_reaches <- st_transform(river_reaches, st_crs(pepper_data))
+}
+
+# Get reach centroids for labeling - only LORP reaches 1-6
+reach_centroids <- river_reaches %>%
+  filter(Name %in% c("LORP Reach 1", "LORP Reach 2", "LORP Reach 3", "LORP Reach 4", "LORP Reach 5", "LORP Reach 6")) %>%
+  st_centroid() %>%
+  mutate(Reach_Label = gsub("LORP Reach ", "R", Name))
+
 # Create comprehensive map with all years
 combined_map <- leaflet(pepper_data) %>%
   # Standard basemaps
@@ -232,6 +261,7 @@ combined_map <- leaflet(pepper_data) %>%
         "Species: ", Species, "<br>",
         "Abundance: ", Abundance, "<br>",
         "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+        ifelse(exists("Name") && !is.na(Name), paste0("LORP Reach: ", Name, "<br>"), ""),
         "Notes: ", ifelse(is.na(Notes), "None", Notes)
       ),
     group = "2018 Data"
@@ -365,19 +395,52 @@ combined_map <- leaflet(pepper_data) %>%
       "Species: ", Species, "<br>",
       "Abundance: ", Abundance, "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
+      ifelse(exists("Name") && !is.na(Name), paste0("LORP Reach: ", Name, "<br>"), ""),
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
     group = "2025 Data"
   ) %>%
+  # Add water quality stations as reference points (if data available)
+  {if(nrow(wq_stations) > 0) {
+    addCircleMarkers(
+      data = wq_stations,
+      radius = 4,
+      color = "white",
+      fillColor = "blue",
+      fillOpacity = 0.8,
+      weight = 2,
+      popup = ~paste0("<b>Water Quality Station</b><br>Reference Point"),
+      group = "Water Quality Stations"
+    )
+  } else {
+    .  # No stations to add
+  }} %>%
+  # Add reach labels (centroids)
+  addLabelOnlyMarkers(
+    data = reach_centroids,
+    label = ~Reach_Label,
+    labelOptions = labelOptions(
+      noHide = TRUE,
+      direction = "center",
+      textOnly = TRUE,
+      style = list(
+        "color" = "white",
+        "font-size" = "14px",
+        "font-weight" = "bold",
+        "text-shadow" = "1px 1px 2px rgba(0,0,0,0.8)"
+      )
+    ),
+    group = "Reach Labels"
+  ) %>%
   addLayersControl(
     baseGroups = c("World Imagery", "OpenStreetMap"),
-    overlayGroups = c("2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data", "2023 Data", "2024 Data", "2025 Data"),
+    overlayGroups = c("2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data", "2023 Data", "2024 Data", "2025 Data", "Reach Labels", if(nrow(wq_stations) > 0) "Water Quality Stations"),
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
   addLegend(
     position = "bottomright",
-    colors = c("black", "darkred", "red", "yellow", "orange", "green", "blue", "purple"),
-    labels = c("2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"),
+    colors = c("black", "darkred", "red", "yellow", "orange", "green", "blue", "purple", if(nrow(wq_stations) > 0) "blue"),
+    labels = c("2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", if(nrow(wq_stations) > 0) "WQ Stations"),
     title = "Pepperweed Distribution by Year"
   )
 
@@ -507,6 +570,432 @@ if(nrow(recent_sites) > 0) {
 - Population estimates may vary based on survey timing and conditions
 - Some areas may be under-sampled due to access constraints
 - Abundance categories are based on field estimates
+
+# River Reach Analysis
+
+```{r river-reach-analysis}
+#| message: false
+#| warning: false
+#| fig-width: 16
+#| fig-height: 15
+
+# Read river reach polygons from ArcGIS Online and filter to LORP reaches 1-6
+reach_url <- "https://inyocounty.maps.arcgis.com/sharing/rest/content/items/90e5870bd5914a928bd97b023f07b807/data"
+river_reaches <- st_read(reach_url, quiet = TRUE)
+
+# Filter to only LORP reaches 1-6 - explicit selection
+desired_lorp_reaches <- c("LORP Reach 1", "LORP Reach 2", "LORP Reach 3", "LORP Reach 4", "LORP Reach 5", "LORP Reach 6")
+river_reaches <- river_reaches %>%
+  filter(Name %in% desired_lorp_reaches)
+
+# Ensure both datasets have the same CRS (WGS84)
+river_reaches <- st_transform(river_reaches, st_crs(pepper_data))
+
+# Check if we have reach data
+cat("Number of river reaches loaded:", nrow(river_reaches), "\n")
+cat("Reach names:", unique(river_reaches$Name), "\n")
+
+# Perform spatial join to determine which reach each pepperweed site is closest to
+# Use nearest neighbor join since sites might not fall exactly within reach polygons
+pepper_data_with_reaches <- pepper_data %>%
+  st_join(river_reaches, join = st_nearest_feature)
+
+# Check how many sites were matched
+cat("Sites before filtering:", nrow(pepper_data), "\n")
+cat("Sites after spatial join:", nrow(pepper_data_with_reaches), "\n")
+cat("Sites with reach assignments:", sum(!is.na(pepper_data_with_reaches$Name)), "\n")
+
+# Filter to only sites within reaches
+pepper_data_with_reaches <- pepper_data_with_reaches %>%
+  filter(!is.na(Name))  # Only keep sites that fall within a reach
+
+# Create summary data for reach analysis
+reach_summary <- pepper_data_with_reaches %>%
+  st_drop_geometry() %>%
+  group_by(Year_Display, Name) %>%
+  summarise(Site_Count = n(), .groups = 'drop') %>%
+  # Ensure all year-reach combinations are represented
+  complete(Year_Display = unique(Year_Display), 
+           Name = unique(Name), 
+           fill = list(Site_Count = 0))
+
+# Create faceted histogram for reaches
+if(nrow(reach_summary) > 0) {
+  # Cap sites at 20 for better small site visibility
+  reach_summary_capped <- reach_summary %>%
+    mutate(Site_Count_Capped = pmin(Site_Count, 20))
+  
+  # Create ordered factor for reaches (1 at top, 6 at bottom)
+  reach_summary_capped <- reach_summary_capped %>%
+    mutate(Name_Ordered = factor(Name, levels = rev(c("LORP Reach 1", "LORP Reach 2", "LORP Reach 3", "LORP Reach 4", "LORP Reach 5", "LORP Reach 6"))))
+  
+  reach_plot <- ggplot(reach_summary_capped, aes(x = Site_Count_Capped, y = Name_Ordered)) +
+    geom_col(fill = "red", alpha = 0.8, width = 0.7) +
+    facet_wrap(~ Year_Display, ncol = 8, scales = "fixed") +  # Single row, fixed scales
+    scale_x_continuous(limits = c(0, 20), breaks = c(0, 5, 10, 15, 20)) +  # Cap at 20
+    scale_y_discrete() +  # Reach names
+    labs(
+      title = "Pepperweed Sites by LORP Reach and Year",
+      subtitle = "Distribution of sites within LORP river reaches (capped at 20 sites)",
+      x = "Number of Sites (capped at 20)",
+      y = "LORP Reach"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 18, face = "bold", color = "#2E86AB"),
+      plot.subtitle = element_text(size = 16, color = "#666666"),
+      axis.title = element_text(size = 14),
+      axis.text.y = element_text(size = 11),
+      axis.text.x = element_text(size = 11),
+      strip.text = element_text(size = 13, face = "bold"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank(),
+      plot.margin = margin(25, 25, 25, 25)
+    )
+  
+  print(reach_plot)
+  
+  # Summary statistics
+  cat("### LORP Reach Distribution Summary\n")
+  cat("**Total Reaches Analyzed**:", length(unique(reach_summary$Name)), "\n")
+  cat("**Years Covered**:", min(reach_summary$Year_Display), "-", max(reach_summary$Year_Display), "\n")
+  cat("**Reaches with Data**:", length(unique(reach_summary$Name[reach_summary$Site_Count > 0])), "\n")
+  
+  # Most active reaches
+  top_reaches <- reach_summary %>%
+    group_by(Name) %>%
+    summarise(Total_Sites = sum(Site_Count), .groups = 'drop') %>%
+    arrange(desc(Total_Sites))
+  
+  cat("\n### Reach Activity Summary\n")
+  for(i in 1:nrow(top_reaches)) {
+    cat("- **", top_reaches$Name[i], "**:", top_reaches$Total_Sites[i], "sites\n")
+  }
+  
+  # Sites not in any reach
+  sites_outside_reaches <- nrow(pepper_data) - nrow(pepper_data_with_reaches)
+  if(sites_outside_reaches > 0) {
+    cat("\n### Sites Outside LORP Reaches\n")
+    cat("- **Sites outside reach polygons**:", sites_outside_reaches, "\n")
+    cat("- **Percentage of total sites**:", round(sites_outside_reaches/nrow(pepper_data)*100, 1), "%\n")
+  }
+} else {
+  cat("No reach data available for analysis.\n")
+}
+```
+
+# Occupancy Analysis
+```{r occupancy-analysis}
+#| message: false
+#| warning: false
+
+# Load river miles data if not already loaded
+if(!exists("rivermiles")) {
+  rivermiles <- st_read('data/LORP_RiverMiles_revised.shp', quiet = TRUE)
+  rivermiles <- rivermiles %>%
+    mutate(RiverMile = as.numeric(NAME))
+  rivermiles <- st_transform(rivermiles, st_crs(pepper_data))
+}
+
+# Create 1/10 mile segments for detailed occupancy analysis
+# Total of 600 segments across 60 miles (0.1 mile resolution)
+segment_size <- 0.1
+total_miles <- 60
+total_segments <- total_miles / segment_size  # 600 segments
+
+# Create segment boundaries
+segment_boundaries <- data.frame(
+  Segment_ID = 1:total_segments,
+  Mile_Start = seq(0, total_miles - segment_size, by = segment_size),
+  Mile_End = seq(segment_size, total_miles, by = segment_size)
+)
+
+# Join pepperweed data with river miles and reaches
+pepper_data_with_miles_and_reaches <- pepper_data %>%
+  st_join(rivermiles, join = st_nearest_feature) %>%
+  st_join(river_reaches, join = st_nearest_feature) %>%
+  mutate(RiverMile = as.numeric(NAME)) %>%
+  filter(!is.na(Name))  # Only sites with reach assignments
+
+# Determine which segment each pepperweed site falls into
+pepper_data_with_segments <- pepper_data_with_miles_and_reaches %>%
+  st_drop_geometry() %>%
+  mutate(
+    Segment_ID = floor(RiverMile / segment_size) + 1,
+    # Ensure segments are within bounds
+    Segment_ID = pmin(Segment_ID, total_segments)
+  )
+
+# Overall occupancy by year
+overall_occupancy <- pepper_data_with_segments %>%
+  group_by(Year_Display) %>%
+  summarise(
+    Segments_Occupied = n_distinct(Segment_ID),
+    Total_Segments = total_segments,
+    Occupancy_Percent = round(Segments_Occupied / Total_Segments * 100, 1),
+    .groups = 'drop'
+  ) %>%
+  arrange(Year_Display)
+
+# Reach-specific occupancy
+reach_occupancy <- pepper_data_with_segments %>%
+  group_by(Year_Display, Name) %>%
+  summarise(
+    Segments_Occupied = n_distinct(Segment_ID),
+    .groups = 'drop'
+  ) %>%
+  # Calculate total segments per reach
+  left_join(
+    pepper_data_with_miles_and_reaches %>%
+      st_drop_geometry() %>%
+      group_by(Name) %>%
+      summarise(
+        Reach_Mile_Start = min(RiverMile, na.rm = TRUE),
+        Reach_Mile_End = max(RiverMile, na.rm = TRUE),
+        Reach_Total_Segments = (Reach_Mile_End - Reach_Mile_Start) / segment_size,
+        .groups = 'drop'
+      ),
+    by = "Name"
+  ) %>%
+  mutate(
+    Occupancy_Fraction = round(Segments_Occupied / Reach_Total_Segments, 3),
+    Occupancy_Percent = round(Occupancy_Fraction * 100, 1)
+  ) %>%
+  arrange(Year_Display, Name)
+
+# Display results
+cat("### Overall Occupancy Analysis\n")
+cat("**Resolution**: 1/10 mile segments (600 total segments across 60 miles)\n\n")
+
+# Overall occupancy table
+cat("#### Overall Occupancy by Year\n")
+print(kable(overall_occupancy, 
+            col.names = c("Year", "Segments Occupied", "Total Segments", "Occupancy %"),
+            align = c("c", "c", "c", "c"),
+            caption = "Number of 1/10 mile segments occupied by pepperweed"))
+
+# Reach occupancy table
+cat("\n#### Reach-Specific Occupancy\n")
+reach_occupancy_wide <- reach_occupancy %>%
+  select(Year_Display, Name, Occupancy_Percent) %>%
+  pivot_wider(names_from = Year_Display, values_from = Occupancy_Percent, names_prefix = "Year_") %>%
+  arrange(Name)
+
+print(kable(reach_occupancy_wide, 
+            col.names = c("LORP Reach", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"),
+            align = c("l", rep("c", 8)),
+            caption = "Percentage of each reach occupied by pepperweed (by year)"))
+
+# Summary statistics
+cat("\n### Occupancy Summary Statistics\n")
+cat("**Average Annual Occupancy**:", round(mean(overall_occupancy$Occupancy_Percent), 1), "%\n")
+cat("**Highest Occupancy Year**:", overall_occupancy$Year_Display[which.max(overall_occupancy$Occupancy_Percent)], 
+    "(", max(overall_occupancy$Occupancy_Percent), "%)\n")
+cat("**Lowest Occupancy Year**:", overall_occupancy$Year_Display[which.min(overall_occupancy$Occupancy_Percent)], 
+    "(", min(overall_occupancy$Occupancy_Percent), "%)\n")
+
+# Most/least occupied reaches
+reach_summary <- reach_occupancy %>%
+  group_by(Name) %>%
+  summarise(
+    Avg_Occupancy = round(mean(Occupancy_Percent), 1),
+    Max_Occupancy = max(Occupancy_Percent),
+    .groups = 'drop'
+  ) %>%
+  arrange(desc(Avg_Occupancy))
+
+cat("\n**Most Occupied Reach**:", reach_summary$Name[1], "(", reach_summary$Avg_Occupancy[1], "% average)\n")
+cat("**Least Occupied Reach**:", reach_summary$Name[nrow(reach_summary)], "(", reach_summary$Avg_Occupancy[nrow(reach_summary)], "% average)\n")
+```
+
+# River Mile Analysis
+
+```{r river-mile-analysis}
+#| message: false
+#| warning: false
+#| fig-width: 16
+#| fig-height: 12
+
+# Read river mile shapefile
+rivermiles <- st_read('data/LORP_RiverMiles_revised.shp', quiet = TRUE)
+
+# Convert NAME to numeric for proper sorting
+rivermiles <- rivermiles %>%
+  mutate(RiverMile = as.numeric(NAME))
+
+# Ensure both datasets have the same CRS (WGS84)
+rivermiles <- st_transform(rivermiles, st_crs(pepper_data))
+
+# Perform spatial join to find closest river mile for each pepperweed site
+pepper_data_with_rivermiles <- pepper_data %>%
+  st_join(rivermiles, join = st_nearest_feature) %>%
+  select(-LAYER, -sym, -gpxx.Displ, -RiverMile) %>%  # Remove unnecessary columns and duplicate RiverMile
+  rename(RiverMile = NAME)
+
+# Create summary data for faceted histogram - bin river miles into whole miles
+river_mile_summary <- pepper_data_with_rivermiles %>%
+  st_drop_geometry() %>%
+  mutate(RiverMile_Binned = floor(as.numeric(RiverMile))) %>%  # Bin to whole miles
+  group_by(Year_Display, RiverMile_Binned) %>%
+  summarise(Site_Count = n(), .groups = 'drop') %>%
+  # Ensure all year-rivermile combinations are represented (extend to mile 60)
+  complete(Year_Display = min(Year_Display):max(Year_Display), 
+           RiverMile_Binned = 0:60, 
+           fill = list(Site_Count = 0))
+
+# Calculate actual reach boundaries from pepperweed data
+# Get the minimum river mile for each reach (northern boundary)
+pepper_data_with_reaches_and_miles <- pepper_data %>%
+  st_join(rivermiles, join = st_nearest_feature) %>%
+  st_join(river_reaches, join = st_nearest_feature) %>%
+  mutate(RiverMile = as.numeric(NAME)) %>%
+  filter(!is.na(Name))  # Only sites with reach assignments
+
+reach_boundaries <- pepper_data_with_reaches_and_miles %>%
+  st_drop_geometry() %>%
+  group_by(Name) %>%
+  summarise(
+    Min_RiverMile = min(RiverMile, na.rm = TRUE),
+    Max_RiverMile = max(RiverMile, na.rm = TRUE),
+    .groups = 'drop'
+  ) %>%
+  mutate(
+    Reach_Num = as.numeric(gsub("LORP Reach ", "", Name)),
+    # Use minimum river mile as the northern boundary (top of reach)
+    Label_Position = Min_RiverMile
+  ) %>%
+  # Sort by minimum river mile to ensure proper ordering (R1 at top, R6 at bottom)
+  arrange(Min_RiverMile) %>%
+  # Reassign reach numbers based on actual river mile order (1 at top, 6 at bottom)
+  mutate(Reach_Num = row_number()) %>%
+  # Create proper reach names
+  mutate(Name = paste0("LORP Reach ", Reach_Num))
+
+# Display the reach boundaries table
+cat("### Reach Boundaries (Northern Boundaries)\n")
+cat("**Table showing minimum river mile for each reach (northern boundary):**\n\n")
+print(kable(reach_boundaries, 
+            col.names = c("LORP Reach", "Min River Mile", "Max River Mile", "Reach Number", "Label Position"),
+            align = c("l", "c", "c", "c", "c"),
+            caption = "Northern boundaries (minimum river miles) for each LORP reach"))
+
+# Use these actual boundaries for the plot
+cat("\n**Using actual reach boundaries from data:**\n")
+print(reach_boundaries)
+
+# Create a simple table showing labels and river miles
+reach_labels_table <- reach_boundaries %>%
+  select(Name, Label_Position) %>%
+  arrange(Label_Position)
+
+cat("\n### Reach Labels and River Miles\n")
+cat("**Table showing reach labels and their river mile positions:**\n\n")
+print(kable(reach_labels_table, 
+            col.names = c("Reach Label", "River Mile"),
+            align = c("l", "c"),
+            caption = "Reach labels and their river mile positions"))
+
+# Create a simple table from pepper_data grouped by reach
+pepper_data_with_miles <- pepper_data %>%
+  st_join(rivermiles, join = st_nearest_feature) %>%
+  st_join(river_reaches, join = st_nearest_feature) %>%
+  mutate(RiverMile = as.numeric(NAME)) %>%
+  filter(!is.na(Name))  # Only sites with reach assignments
+
+reach_min_miles <- pepper_data_with_miles %>%
+  st_drop_geometry() %>%
+  group_by(Name) %>%
+  summarise(Min_RiverMile = min(RiverMile, na.rm = TRUE), .groups = 'drop') %>%
+  arrange(Min_RiverMile)
+
+cat("\n### Reach Minimum River Miles\n")
+cat("**Table showing minimum river mile for each reach:**\n\n")
+print(kable(reach_min_miles, 
+            col.names = c("Reach", "Min River Mile"),
+            align = c("l", "c"),
+            caption = "Minimum river mile for each reach"))
+
+# Create faceted histogram
+if(nrow(river_mile_summary) > 0) {
+  # Calculate consistent x-axis limits across all years
+  max_sites <- max(river_mile_summary$Site_Count, na.rm = TRUE)
+  x_limit <- ceiling(max_sites * 1.1)  # Add 10% padding
+  
+  # Cap sites at 20 for better small site visibility and reverse y-axis (0 at top)
+  river_mile_summary_capped <- river_mile_summary %>%
+    mutate(Site_Count_Capped = pmin(Site_Count, 20),
+           RiverMile_Binned = factor(RiverMile_Binned, levels = sort(unique(RiverMile_Binned), decreasing = TRUE)))
+  
+  # Manually set reach boundaries based on the table values
+  # LORP Reach 1: 0.1 -> bin 0
+  # LORP Reach 2: 3.7 -> bin 3 or 4  
+  # LORP Reach 3: 19.7 -> bin 19 or 20
+  # LORP Reach 4: 34.5 -> bin 34 or 35
+  # LORP Reach 5: 39.0 -> bin 39
+  # LORP Reach 6: 49.7 -> bin 49 or 50
+  
+  reach_boundaries_plot <- data.frame(
+    Name = c("Reach 1", "Reach 2", "Reach 3", "Reach 4", "Reach 5", "Reach 6"),
+    Closest_Bin = c("0", "4", "20", "35", "39", "50")
+  )
+  
+  cat("\n### Manual Reach Boundaries for Plot\n")
+  print(reach_boundaries_plot)
+  
+  river_plot <- ggplot(river_mile_summary_capped, aes(x = Site_Count_Capped, y = factor(RiverMile_Binned))) +
+    geom_col(fill = "red", alpha = 0.8, width = 0.7) +
+    # Add horizontal lines for reach boundaries using closest binned values
+    geom_hline(data = reach_boundaries_plot, aes(yintercept = Closest_Bin), color = "blue", linetype = "solid", alpha = 0.8, size = 1) +
+    # Add reach labels - one per reach, positioned below the lines and well within visible area
+    geom_text(data = reach_boundaries_plot %>% 
+                mutate(Year_Display = 2018),  # Only show labels on 2018 panel
+              aes(x = 10, y = Closest_Bin, label = Name), 
+              hjust = 0, vjust = 1.5, color = "blue", size = 6, fontface = "bold") +
+    facet_wrap(~ Year_Display, ncol = 8, scales = "fixed") +  # Single row, fixed scales
+    scale_x_continuous(limits = c(0, 20), breaks = c(0, 5, 10, 15, 20)) +  # Cap at 20
+    scale_y_discrete(breaks = function(x) x[seq(1, length(x), by = 5)]) +  # Every 5 miles
+    labs(
+      title = "Pepperweed Sites by River Mile and Year",
+      subtitle = "Distribution of sites along the LORP river corridor (binned by mile, capped at 20 sites)",
+      x = "Number of Sites (capped at 20)",
+      y = "River Mile"
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(size = 22, face = "bold", color = "#2E86AB"),
+      plot.subtitle = element_text(size = 18, color = "#666666"),
+      axis.title = element_text(size = 16, face = "bold"),
+      axis.text.y = element_text(size = 14),
+      axis.text.x = element_text(size = 14),
+      strip.text = element_text(size = 16, face = "bold"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major.y = element_blank(),
+      plot.margin = margin(25, 25, 25, 25)  # Add margin for better spacing
+    )
+  
+  print(river_plot)
+  
+  # Summary statistics
+  cat("### River Mile Distribution Summary\n")
+  cat("**Total River Miles Analyzed**:", length(unique(river_mile_summary$RiverMile_Binned)), "\n")
+  cat("**Years Covered**:", min(river_mile_summary$Year_Display), "-", max(river_mile_summary$Year_Display), "\n")
+  cat("**River Mile Range**:", min(river_mile_summary$RiverMile_Binned), "-", max(river_mile_summary$RiverMile_Binned), "\n")
+  
+  # Most active river miles
+  top_river_miles <- river_mile_summary %>%
+    group_by(RiverMile_Binned) %>%
+    summarise(Total_Sites = sum(Site_Count), .groups = 'drop') %>%
+    arrange(desc(Total_Sites)) %>%
+    head(10)
+  
+  cat("\n### Top 10 Most Active River Miles\n")
+  for(i in 1:nrow(top_river_miles)) {
+    cat("- **River Mile", top_river_miles$RiverMile_Binned[i], "**:", top_river_miles$Total_Sites[i], "sites\n")
+  }
+} else {
+  cat("No river mile data available for analysis.\n")
+}
+```
 
 # Field Documentation
 
