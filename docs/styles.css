@@ -1,10 +1,21 @@
-/* Perennial Pepperweed — clean Quarto site (cosmo + right TOC) */
+/* Perennial Pepperweed — clean Quarto site (cosmo + right TOC)
+   Link/button blue darkened for WCAG AA contrast (≥4.5:1 on white). */
+
+:root {
+  --pw-link: #1565c0;
+  --pw-link-hover: #0d47a1;
+  --pw-text: #212529;
+  --pw-muted: #495057;
+  --pw-border: #dee2e6;
+  --pw-surface: #f8f9fa;
+  --pw-focus: #0d47a1;
+}
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-size: 16px;
   line-height: 1.65;
-  color: #212529;
+  color: var(--pw-text);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -39,12 +50,12 @@ h1, h2, h3, h4, h5, h6 {
   padding: 0.2rem 0;
   font-size: 0.85rem;
   line-height: 1.35;
-  color: #495057;
+  color: var(--pw-muted);
 }
 
 #TOC .nav-link.active,
 #TOC .nav-link:hover {
-  color: #2780e3;
+  color: var(--pw-link);
 }
 
 #TOC ul ul {
@@ -59,13 +70,22 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Links */
 a {
-  color: #2780e3;
+  color: var(--pw-link);
   text-decoration: none;
 }
 
 a:hover {
-  color: #1a5fad;
+  color: var(--pw-link-hover);
   text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible,
+.nav-link:focus-visible,
+.download-links a:focus-visible,
+.leaflet-control a:focus-visible {
+  outline: 3px solid var(--pw-focus);
+  outline-offset: 2px;
 }
 
 /* Tables */
@@ -113,12 +133,19 @@ table {
 
 .leaflet-container {
   border-radius: 0.25rem;
-  border: 1px solid #dee2e6;
+  border: 1px solid var(--pw-border);
+}
+
+.map-a11y-summary {
+  margin: 0.75rem 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--pw-surface);
+  border-left: 3px solid var(--pw-link);
 }
 
 /* Code */
 pre {
-  background-color: #f8f9fa;
+  background-color: var(--pw-surface);
   border: 1px solid #e9ecef;
   border-radius: 0.25rem;
   padding: 0.75rem 1rem;
@@ -127,7 +154,7 @@ pre {
 
 /* Content blocks */
 .download-section {
-  background-color: #f8f9fa;
+  background-color: var(--pw-surface);
   border: 1px solid #e9ecef;
   border-radius: 0.25rem;
   padding: 1.25rem;
@@ -148,20 +175,20 @@ pre {
   display: inline-flex;
   align-items: center;
   padding: 0.4rem 0.85rem;
-  background-color: #2780e3;
+  background-color: var(--pw-link);
   color: #fff;
   border-radius: 0.25rem;
   font-weight: 500;
 }
 
 .download-links a:hover {
-  background-color: #1a5fad;
+  background-color: var(--pw-link-hover);
   color: #fff;
   text-decoration: none;
 }
 
 .spatial-extent {
-  background-color: #f8f9fa;
+  background-color: var(--pw-surface);
   border: 1px solid #e9ecef;
   border-radius: 0.25rem;
   padding: 1rem;
@@ -184,6 +211,22 @@ pre {
   visibility: hidden !important;
   height: 0 !important;
   overflow: hidden !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  #TOC {
+    position: static;
+    max-height: none;
+  }
 }
 
 /* Print */

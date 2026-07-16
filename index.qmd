@@ -19,7 +19,7 @@ format:
   html:
     theme: cosmo
     toc: true
-    toc-depth: 3
+    toc-depth: 4
     toc-location: right
     code-fold: true
     code-tools: true
@@ -59,7 +59,7 @@ format_abundance <- function(x) {
 }
 ```
 
-# Summary
+## Summary
 
 This data report covers the monitoring of **Lepidium latifolium** (perennial pepperweed) in the Lower Owens River Project (LORP) area from `r params$start_year` to `r params$current_year`. The data is sourced from the [ArcGIS Online Noxious Weeds 2025 feature service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0) and provides updated spatial occurrence as of `r params$current_year`. 
 
@@ -154,11 +154,11 @@ summary_stats <- pepper_data %>%
   arrange(Year_Display)
 ```
 
-## Data Overview
+### Data Overview
 
 The dataset includes `r nrow(pepper_data)` total observations across `r length(unique(pepper_data$Year_Display[!is.na(pepper_data$Year_Display)]))` years, with peak survey activity in `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` (`r max(table(pepper_data$Year_Display, useNA='ifany'))` records).
 
-## Key Findings Summary
+### Key Findings Summary
 
 - **Total Observations**: `r nrow(pepper_data)` records across all years (2018-2025)
 - **Peak Survey Year**: `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` with `r max(table(pepper_data$Year_Display, useNA='ifany'))` observations
@@ -166,17 +166,21 @@ The dataset includes `r nrow(pepper_data)` total observations across `r length(u
 - **Historical Baseline**: `r nrow(pepper_historical)` observations in 2018-2021
 - **Data Coverage**: `r round((nrow(pepper_data) - sum(is.na(pepper_data$Year_Display))) / nrow(pepper_data) * 100, 1)`% of records have complete date information (using observation date with creation date fallback)
 
-# Interactive Map Comparison
+## Interactive Map Comparison
 
 The following interactive map shows pepperweed populations across all years (`r params$start_year`-`r params$current_year`). Use the layer controls in the top-right corner to toggle between different years. The map includes all `r nrow(pepper_data)` documented observations, with feature creation dates used when observation dates are unavailable.
 
 **Map layers:** purple **River channels** (multithreaded Owens River) and blue **High-water line** (June 2023 floodplain). Survey-gap polygons are deferred for now — use the tabular monitoring recommendations below.
 
+::: {.map-a11y-summary}
+**Accessible map summary:** Points are colored by survey year (`r params$start_year`–`r params$current_year`) along the LORP corridor. Toggle year layers and basemap with the map controls. The same occurrence data are available as downloadable GeoJSON/KML below and are summarized in the reach, occupancy, and river-mile tables later in this report. Screen-reader users can rely on those tables and the year legend title “Detected and reported per year” rather than the interactive map canvas.
+:::
+
 <div class="download-section">
 <h3>Data Downloads</h3>
 <div class="download-links">
-<a href="pepperweed_data.geojson">📊 Download GeoJSON</a>
-<a href="pepperweed_data.kml">🌍 Download KML</a>
+<a href="pepperweed_data.geojson">Download GeoJSON</a>
+<a href="pepperweed_data.kml">Download KML</a>
 </div>
 <p>Complete dataset with all `r nrow(pepper_data)` pepperweed observations</p>
 </div>
@@ -507,10 +511,21 @@ combined_map <- combined_map %>%
     title = "Detected and reported per year"
   )
 
+combined_map <- combined_map %>%
+  htmlwidgets::onRender(
+    "function(el, x) {
+      el.setAttribute('role', 'img');
+      el.setAttribute(
+        'aria-label',
+        'Interactive map of perennial pepperweed detections along the Lower Owens River Project corridor, colored by survey year. Use the layer control to toggle years. Equivalent data are in the downloadable files and tables in this report.'
+      );
+    }"
+  )
+
 combined_map
 ```
 
-## `r params$current_year` Distribution - plants per site estimated from field observations
+### `r params$current_year` Distribution - plants per site estimated from field observations
 
 Field abundance is recorded in discrete estimate classes (**5, 15, 25, 100, 200**). A value of **200 means ≥200 plants** — a lower bound for dense stands that may contain hundreds to thousands of individuals (not an exact count of 200).
 
@@ -519,6 +534,7 @@ The following chart shows the distribution of these abundance classes for pepper
 ```{r abundance-histogram}
 #| message: false
 #| warning: false
+#| fig-alt: "Bar chart of perennial pepperweed sites by field abundance class (5, 15, 25, 100, 200+) for the current survey year. Class 200+ means 200 or more plants and may represent thousands."
 
 # Filter for current year data only
 pepper_current_year <- pepper_data %>%
@@ -600,7 +616,7 @@ if(nrow(pepper_current_year) > 0) {
 The interactive map above provides the primary visualization of pepperweed distribution patterns. 
 
 
-### Recent Sites
+#### Recent Sites
 ```{r new-sites}
 #| message: false
 #| warning: false
@@ -625,27 +641,28 @@ if(nrow(recent_sites) > 0) {
 
 
 
-# Data Quality and Limitations
+## Data Quality and Limitations
 
-## Data Sources
+### Data Sources
 - **Primary Source**: [ArcGIS Online Noxious Weeds 2025 Feature Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
 
 - **Last Updated**: `r format(as.POSIXct(max(pepper_data$CreationDate, na.rm = TRUE)/1000, origin='1970-01-01'), "%B %d, %Y")`
 - **Coordinate System**: WGS84 (EPSG:4326)
 
-## Limitations
+### Limitations
 - Data represents documented observations only
 - Population estimates may vary based on survey timing and conditions
 - Some areas may be under-sampled due to access constraints
 - Abundance is recorded in field estimate classes (**5, 15, 25, 100, 200**); **200 means ≥200 plants** and dense stands may contain thousands of individuals
 
-# River Reach Analysis
+## River Reach Analysis
 
 ```{r river-reach-analysis}
 #| message: false
 #| warning: false
 #| fig-width: 16
 #| fig-height: 15
+#| fig-alt: "Faceted bar charts showing pepperweed site counts by year for each LORP reach (Reaches 1 through 6)."
 
 # Read river reach polygons from ArcGIS Online and filter to LORP reaches 1-6
 reach_url <- "https://inyocounty.maps.arcgis.com/sharing/rest/content/items/90e5870bd5914a928bd97b023f07b807/data"
@@ -752,7 +769,7 @@ if(nrow(reach_summary) > 0) {
 }
 ```
 
-# Occupancy Analysis
+## Occupancy Analysis
 ```{r occupancy-analysis}
 #| message: false
 #| warning: false
@@ -876,11 +893,11 @@ cat("\n**Most Occupied Reach**:", reach_summary$Name[1], "(", reach_summary$Avg_
 cat("**Least Occupied Reach**:", reach_summary$Name[nrow(reach_summary)], "(", reach_summary$Avg_Occupancy[nrow(reach_summary)], "% average)\n")
 ```
 
-## Cumulative Discovery and Occupancy Forecasts
+### Cumulative Discovery and Occupancy Forecasts
 
 Annual occupancy fluctuates with survey effort. A more informative metric for the “more you look, the more you find” pattern is **cumulative discovery**: the share of corridor segments that have ever had a detection. Pepperweed is already widespread on adjacent conveyances and upper-river reaches, so the planning question is when known occupancy along the LORP corridor approaches saturation.
 
-### Cumulative Discovery by Year
+#### Cumulative Discovery by Year
 
 Once a segment or river mile has a detection, it remains in the cumulative total. This isolates discovery/spread from year-to-year survey intensity.
 
@@ -1098,7 +1115,7 @@ infill_gaps <- data.frame(
 
 # Model fit summary text (emitted after tables)
 fit_summary_md <- paste0(
-  "\n#### Model Fit Summary\n\n",
+  "\n##### Model Fit Summary\n\n",
   sprintf("- **Segment linear**: +%.1f percentage points/year → 100%% in ~%.0f\n",
           seg_lin$b, seg_lin$year_100),
   sprintf("- **Mile linear (full series)**: +%.1f percentage points/year → 100%% in ~%.0f\n",
@@ -1116,7 +1133,7 @@ fit_summary_md <- paste0(
 )
 ```
 
-### Forecast to Corridor Saturation
+#### Forecast to Corridor Saturation
 
 Models fit to cumulative occupancy and projected forward:
 
@@ -1138,7 +1155,7 @@ print(kable(milestones,
             caption = "Projected calendar year when cumulative occupancy reaches each milestone (fit to 2018–2025 discovery)"))
 ```
 
-#### Infill lag (whole mile → 0.1-mi segment)
+##### Infill lag (whole mile → 0.1-mi segment)
 
 The **horizontal gap** between the blue (whole-mile) and red (0.1-mi) logistic curves is the years of additional discovery needed to occupy every subsegment once whole-mile occupancy has already reached that level.
 
@@ -1160,6 +1177,7 @@ cat(fit_summary_md)
 #| warning: false
 #| fig-width: 12
 #| fig-height: 7
+#| fig-alt: "Line chart of cumulative pepperweed occupancy over time for whole river miles and 0.1-mile segments, with linear, logistic, and recent-trajectory forecasts toward 100 percent known occupancy."
 plot_df_obs <- cum_occupancy %>%
   select(Year, Seg_Pct, Mile_Pct) %>%
   pivot_longer(-Year, names_to = "Series", values_to = "Pct") %>%
@@ -1273,7 +1291,7 @@ forecast_plot <- ggplot() +
 print(forecast_plot)
 ```
 
-### Interpretation
+#### Interpretation
 
 `r paste0("- **Whole-mile occupancy** is already high (~", cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs], "% known), consistent with pepperweed being fairly ubiquitous along the corridor at coarse scale.")`
 
@@ -1284,13 +1302,14 @@ print(forecast_plot)
 - Full-series linear/logistic forecasts are slower and more consistent with a sampling plateau; the recent trajectory is an upper-bound discovery scenario, not a separate biological invasion model.
 - Increased RAS effort in currently empty miles (see Monitoring Recommendations) will accelerate cumulative discovery even without new colonization.
 
-# River Mile Analysis
+## River Mile Analysis
 
 ```{r river-mile-analysis}
 #| message: false
 #| warning: false
 #| fig-width: 16
 #| fig-height: 12
+#| fig-alt: "Faceted bar charts of pepperweed site counts by whole river mile (0 to 60) for each survey year along the LORP corridor."
 
 # Read river mile shapefile
 rivermiles <- st_read('data/LORP_RiverMiles_revised.shp', quiet = TRUE)
@@ -1473,11 +1492,11 @@ if(nrow(river_mile_summary) > 0) {
 }
 ```
 
-# 2026 Monitoring Recommendations
+## 2026 Monitoring Recommendations
 
 The [FY 2026–2027 LORP work plan](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf) directs summer RAS (rapid assessment survey) monitoring to focus on areas **without known pepperweed populations**. Study-design crosswalk: [`lorp-pia-completion` Doc 11](https://github.com/inyo-gov/lorp-pia-completion/blob/main/docs/11_fy2627_approved_workplan_reference.md). The tables below are derived from `r params$start_year`–`r params$current_year` occurrence data binned to whole river miles (see [River Mile Analysis](#river-mile-analysis)).
 
-## Priority Survey Areas
+### Priority Survey Areas
 
 River-mile segments with **no pepperweed detections on the river corridor** in any survey year (`r params$start_year`–`r params$current_year`). Only sites within 250 m of a river-mile marker count toward occupancy (off-channel ditch/field points are excluded so they do not falsely mark a mile as occupied). These align with the workplan objective to survey unoccupied corridor.
 
@@ -1585,7 +1604,7 @@ if (nrow(survey_segments) > 0) {
 
 `r if (exists("never_detected_miles") && length(never_detected_miles) > 0) paste0("**Summary:** ", length(never_detected_miles), " of ", length(mile_range), " river miles (", round(100 * length(never_detected_miles) / length(mile_range), 1), "%) have no recorded pepperweed on the corridor (within 250 m of a river-mile marker).")`
 
-## East / West Bank Planning Notes
+### East / West Bank Planning Notes
 
 Historical surveys do not record bank side in the feature service. For planning purposes, site coordinates were classified as **east** or **west** of the river centerline using the local channel direction at each river mile.
 
@@ -1673,13 +1692,13 @@ if (nrow(one_bank_gaps) > 0) {
 }
 ```
 
-## Suggested 2026 Survey Sequence
+### Suggested 2026 Survey Sequence
 
 1. **Reach 6 lower corridor (RM 43–48, 51–52, 54–60)** — largest unoccupied segments; highest workplan priority.
 2. **Reach 3 gap miles (RM 21–22, 24)** — short unoccupied segments within otherwise occupied reach; efficient to cover during Reach 3 transit.
 3. **Single-bank follow-up** — optional targeted passes on the undetected bank at miles listed above, if crew capacity allows.
 
-## Access and Route Planning (next step)
+### Access and Route Planning (next step)
 
 The current navigation polygons follow the **mainstem river-mile centerline** (±100 m). That is enough to flag *where* to look, but not *how* crews actually move:
 
@@ -1695,7 +1714,7 @@ The current navigation polygons follow the **mainstem river-mile centerline** (�
 
 *Drop GPX/GeoJSON tracklogs or an AGOL item URL into `data/` (or share the service link) and this export can be rebuilt on those routes.*
 
-## Field Maps Navigation Layer
+### Field Maps Navigation Layer
 **Area without RAS detections** = June 2023 [high-water](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_north/FeatureServer) floodplain ([south](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_south/FeatureServer) + north), split by river mile and bank, **minus** bank sides that already have pepperweed detections. The [multithreaded river](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/owens_river_feature/FeatureServer) is included as a reference layer.
 
 ```{r survey-nav-export}
@@ -1751,7 +1770,7 @@ if (file.exists(nav_path)) {
 }
 ```
 
-# Field Documentation
+## Field Documentation
 
 ```{r field-images}
 #| message: false
@@ -1786,23 +1805,25 @@ get_feature_attachments <- function(objectid) {
 }
 
 # Function to display an image from attachment
-display_attachment_image <- function(objectid, attachment_id, width = 500) {
+display_attachment_image <- function(objectid, attachment_id, alt_text, width = 500) {
   base_url <- "https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0"
   image_url <- paste0(base_url, "/", objectid, "/attachments/", attachment_id)
-  
+  alt_esc <- htmltools::htmlEscape(alt_text, attribute = TRUE)
+
   # Create HTML for image display
   html_content <- paste0(
     '<div style="display: inline-block; margin: 15px; text-align: center;">',
-    '<img src="', image_url, '" style="max-width: ', width, 'px; height: auto; border: 2px solid #ddd; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.15);">',
+    '<img src="', image_url, '" alt="', alt_esc, '" style="max-width: ', width,
+    'px; height: auto; border: 2px solid #ddd; border-radius: 8px;">',
     '</div>'
   )
-  
+
   # Use cat to output HTML directly
   cat(html_content)
 }
 ```
 
-## Field Documentation Images
+### Field Documentation Images
 
 Pepperweed observations with field photos:
 
@@ -1838,9 +1859,15 @@ if(length(features_with_attachments) > 0) {
     if(!is.null(attachments) && length(attachments) > 0) {
       # Get the first image attachment
       first_attachment <- attachments[[1]]
-      
+
+      alt_text <- paste0(
+        "Field photo of perennial pepperweed, Feature ID ", objectid,
+        ", observed ", format(feature$Date_Display, "%Y-%m-%d"),
+        ", abundance ", format_abundance(feature$Abundance)
+      )
+
       # Display image first
-      display_attachment_image(objectid, first_attachment$id)
+      display_attachment_image(objectid, first_attachment$id, alt_text)
       
       # Display metadata below the image
       cat("<div style='text-align: center; margin-bottom: 30px;'>")
@@ -1865,13 +1892,13 @@ if(images_displayed == 0) {
 }
 ```
 
-# Conclusion
+## Conclusion
 
 The `r params$start_year`-`r params$current_year` data reveals expanding pepperweed distribution within the LORP area. The interactive mapping tool provides land managers with a visualization tool for identifying and prioritizing treatment areas over time.
 
 This report will be updated as new data are added to the live feature service. The data source is available at: [ArcGIS REST Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
 
-## Data Disclaimer
+### Data Disclaimer
 
 The data presented in this report are collected for monitoring and management purposes by the Inyo County Water Department. While every effort is made to ensure accuracy, field conditions, survey timing, and observer experience may affect data quality. Users should verify critical information independently before making management decisions.
 

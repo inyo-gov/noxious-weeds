@@ -13,13 +13,15 @@ website:
         text: Report
       - icon: github
         href: https://github.com/inyo-gov/noxious-weeds
+        text: GitHub
+        aria-label: "GitHub repository (inyo-gov/noxious-weeds)"
     search: true
 
 format:
   html:
     theme: cosmo
     toc: true
-    toc-depth: 3
+    toc-depth: 4
     toc-location: right
     code-fold: true
     code-tools: true
