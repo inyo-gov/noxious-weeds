@@ -1,199 +1,130 @@
 # Perennial Pepperweed Mapping
 
-## Overview
+Interactive Quarto report for perennial pepperweed (`Lepidium latifolium`) monitoring along the Lower Owens River Project (LORP) corridor, Owens Valley, California.
 
-This repository contains an interactive Quarto website for mapping and analyzing perennial pepperweed sites within the Lower Owens River Project (LORP) area in Owens Valley, California. The analysis focuses on monitoring noxious weeds from 2018-2025 and into the future, with particular emphasis on identifying new satellite sites that require management attention.
+**Live site:** [inyo-gov.github.io/noxious-weeds](https://inyo-gov.github.io/noxious-weeds)  
+**Workplan:** [FY 2026–2027 LORP Work Plan and Budget (PDF)](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf)
 
-## Features
+## What’s in the report
 
-- **Interactive Leaflet Maps**: Compare pepperweed sites across years (2018-2025)
-- **Dynamic Data Loading**: Real-time data from ArcGIS Online feature services
-- **LORP Area Focus**: Automatically filters data to the LORP study area
-- **Abundance Analysis**: Histograms and statistics for site distribution
-- **Priority Site Identification**: Highlights recent high-priority sites requiring attention
-- **Field Documentation**: Up to 40 field photos with metadata
-- **Data Downloads**: GeoJSON and KML exports for further analysis
-- **Multi-Format Output**: HTML website and Word document generation
+- **Interactive Leaflet map** — detections by year (`2018`–`current_year`), high-water floodplain, and river channels
+- **Abundance analysis** — field classes `5 / 15 / 25 / 100 / 200+` (200 = ≥200 plants; may be thousands)
+- **Reach and river-mile analysis** — LORP Reaches 1–6 and whole-mile summaries
+- **Occupancy & cumulative discovery** — annual occupancy plus forecasts toward corridor saturation (linear / asymptotic / logistic / recent-trajectory)
+- **2026 RAS recommendations** — unoccupied river miles (250 m corridor filter), east/west bank planning notes, suggested survey sequence (**tables + text are the source of truth**; see caveat below)
+- **Field Maps exports** — draft floodplain “area without RAS detections” layers (not yet field-ready)
+- **Field photos** — recent AGOL attachments with metadata
+- **Downloads** — GeoJSON / KML of mapped sites
 
-## Project Structure
+Output formats: HTML (`docs/`) for GitHub Pages and Word (`docs/index.docx`).
+
+## Data sources
+
+| Layer | Source |
+| --- | --- |
+| Pepperweed sites | [Noxious Weeds 2025 View](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0) |
+| High-water floodplain | [north](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_north/FeatureServer) / [south](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_south/FeatureServer) |
+| River channels | [owens_river_feature](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/owens_river_feature/FeatureServer) |
+| River miles | `data/LORP_RiverMiles_revised.shp` |
+| Reaches | AGOL LORP reach polygons (Reaches 1–6) |
+
+Pepperweed and reference layers are pulled live at render time. River miles ship with the repo.
+
+## Project layout
 
 ```
 noxious-weeds/
-├── index.qmd                 # Main Quarto document
-├── _quarto.yml              # Quarto website configuration
-├── styles.css               # Custom CSS styling
-├── docs/                    # Generated website files (GitHub Pages)
-│   ├── index.html           # Main website
-│   ├── index.docx           # Word document
-│   ├── pepperweed_data.geojson
-│   └── pepperweed_data.kml
-├── custom-reference.docx    # Word template
-├── inyo_logo.png           # County logo
-├── setup_r_packages.R      # R package installation
-├── create_reference_doc.R  # Word template creation
-├── render_pepperweed_report.R # Automated rendering
-├── update_year.R           # Year parameter update script
-├── r_requirements.txt      # R package dependencies
-└── requirements.txt        # Python dependencies
+├── index.qmd                 # Main report
+├── _quarto.yml               # Website config → docs/
+├── styles.css
+├── export_survey_nav.R       # Field Maps / floodplain negative-space export
+├── render_pepperweed_report.R
+├── update_year.R             # Bump params$current_year
+├── setup_r_packages.R
+├── data/                     # River-mile shapefile
+├── exports/survey_nav_2026/  # GeoJSON + shapefile zip for Field Maps
+└── docs/                     # Rendered site (GitHub Pages)
 ```
 
-## Data Source
+Optional scripts (not required for the HTML report): `lorp_om_map.py`, `lepidium_app.py`, `arcfetch_storeduckdb.py`.
 
-The analysis uses data from the Inyo County ArcGIS Online feature service:
-- **Service**: Noxious Weeds 2025 View
-- **URL**: `https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0`
-- **Update Frequency**: Real-time (data updates automatically when new observations are added)
+## Setup
 
-## Setup and Installation
-
-### Prerequisites
-
-- R (version 4.0 or higher)
-- Python (for Quarto)
-- Quarto CLI
-
-### R Package Installation
-
-Run the setup script to install all required R packages:
+**Prerequisites:** R ≥ 4.0, Quarto CLI, network access to ArcGIS Online.
 
 ```r
 source("setup_r_packages.R")
 ```
 
-Or install manually:
+Or install from `r_requirements.txt` / the packages listed in `setup_r_packages.R`.
 
-```r
-install.packages(c(
-  "sf", "dplyr", "leaflet", "leaflet.extras2", "lubridate", 
-  "htmltools", "knitr", "DT", "tidyr", "ggplot2", "plotly", 
-  "officer", "flextable", "webshot2", "httr", "scales"
-))
-```
+Python deps in `requirements.txt` are only needed for optional utilities (not Quarto HTML).
 
-### Python Dependencies
+## Render
 
-```bash
-pip install -r requirements.txt
-```
-
-## Usage
-
-### Generate the Report
-
-#### Option 1: Manual Rendering
 ```bash
 quarto render index.qmd
 ```
 
-#### Option 2: Automated Rendering (HTML + Word)
+Or both HTML and Word:
+
 ```r
 source("render_pepperweed_report.R")
 ```
 
-### Update for New Year
+Refresh Field Maps navigation layers (also runs from the report if the script is present):
 
-To update the report for a new year (e.g., 2026):
+```bash
+Rscript export_survey_nav.R
+```
+
+### Update for a new survey year
 
 ```bash
 Rscript update_year.R 2026
 quarto render index.qmd
 ```
 
-### Create Word Template
+Parameters in `index.qmd`:
 
-If you need to regenerate the Word template:
+- `current_year` — latest survey year (default `2025`)
+- `start_year` — start of time series (default `2018`)
 
-```r
-source("create_reference_doc.R")
-```
+## Survey navigation exports
 
-## Output Formats
+**Caveat (through end of July 2026):** the recommended monitoring polygons are **not currently accurate** for field use. Plan from the **river-mile recommendation tables and narrative** in the report (Priority Survey Areas, bank notes, survey sequence). Do not treat the GeoJSON/shapefile exports as final navigation units yet.
 
-### HTML Website (`docs/index.html`)
-- Interactive Leaflet maps
-- Downloadable data files (GeoJSON, KML)
-- Responsive design optimized for web viewing
-- GitHub Pages compatible
+**Deadline:** revise and ship corrected Field Maps polygons by **end of July 2026** (~2 weeks from mid-July).
 
-### Word Document (`docs/index.docx`)
-- Static maps (screenshots of interactive elements)
-- Professional formatting for reports
-- Suitable for printing and sharing
+`export_survey_nav.R` builds a first-pass “area without RAS detections” layer:
 
-## Key Analysis Components
+1. June 2023 high-water polygons as floodplain extent  
+2. Split east / west of the river by mile  
+3. Keep mile×bank cells with **zero** pepperweed detections  
 
-### 1. LORP Area Filtering
-The analysis automatically filters data to focus on the LORP study area by:
-- Identifying the northernmost 2025 observation
-- Filtering all data to points south of this latitude
-- Ensuring analysis focuses on the relevant geographic extent
-
-### 2. Site Abundance Analysis
-- Histogram showing distribution of site sizes
-- Statistics for small (≤100) and large (>100) sites
-- Focus on identifying new satellite sites
-
-### 3. Priority Site Identification
-- Recent high-priority sites (2024-2025)
-
-### 4. Temporal Analysis
-- Year-over-year site changes
-- Identification of new sites requiring attention
-- Long-term monitoring trends (2018-2025)
-
-## Data Downloads
-
-The generated website includes downloadable data files:
-- **GeoJSON**: For GIS analysis and mapping
-- **KML**: For Google Earth visualization
-- **Spatial Extent**: Bounding box coordinates for the study area
-
-## Customization
-
-### Parameters
-The report uses Quarto parameters for easy customization:
-- `current_year`: Current analysis year (default: 2025)
-- `start_year`: Starting year for analysis (default: 2018)
-
-### Styling
-- Custom CSS in `styles.css`
-- Responsive design for various screen sizes
+Outputs land in `exports/survey_nav_2026/` and are copied to `docs/exports/` on render. Use those files only after the July update unless you are developing the polygon fix.
 
 ## Deployment
 
-### GitHub Pages
-1. Push repository to GitHub
-2. Enable GitHub Pages in repository settings
-3. Set source to `docs` folder
-4. Website will be available at `https://username.github.io/noxious-weeds`
+GitHub Pages is configured for the `docs/` folder → [inyo-gov.github.io/noxious-weeds](https://inyo-gov.github.io/noxious-weeds).
 
-### Local Server
+Local preview:
+
 ```bash
-cd docs
-python -m http.server 8000
-# Access at http://localhost:8000
+cd docs && python -m http.server 8000
 ```
 
-## Contributing
+## Notes
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test rendering with `quarto render index.qmd`
-5. Submit a pull request
-
-## License
-
-This project is licensed under the terms specified in the LICENSE file.
+- Sites more than **250 m** from a river-mile marker are excluded from corridor occupancy so off-channel ditch/field points do not falsely occupy a mile.
+- Abundance class **200** means **≥200** (dense patches are not stem-counted).
+- Occupancy forecasts are descriptive discovery models, not biological invasion rates; more RAS effort in empty miles raises known occupancy even without new colonization.
+- See `WORKLOG.md` for recent planning context and open follow-ups (tracklog overlays, TG purpose text, etc.).
 
 ## Contact
 
-For questions about this analysis or the LORP monitoring program, contact the Inyo County Water Department.
+Inyo County Water Department — LORP / noxious weeds monitoring.
 
-## Technical Notes
+## License
 
-- **Data Processing**: Unix timestamps are converted to POSIXct for proper date handling
-- **Fallback Dates**: Uses `CreationDate` when `Date_Observed` is not available
-- **Spatial Filtering**: Dynamic LORP area filtering based on current year data
-- **Performance**: Optimized for datasets with 1000+ observations
-- **Compatibility**: Works with R 4.0+, Quarto 1.4+, modern web browsers
+See [LICENSE](LICENSE).

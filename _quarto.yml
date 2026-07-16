@@ -1,30 +1,29 @@
 project:
   type: website
   output-dir: docs
+  # Survey nav downloads are copied flat into docs/exports/ by the report chunk
+  # (export_survey_nav.R → exports/survey_nav_2026/ → docs/exports/).
 
 website:
-  title: "Pepperweed Populations LORP 2018–2024"
-  site-url: https://yourusername.github.io/noxious-weeds
+  title: "Perennial Pepperweed Mapping"
+  site-url: https://inyo-gov.github.io/noxious-weeds
   navbar:
-    title: "Perennial Pepperweed Mapping"
-    logo: inyo_logo.png
     left:
       - href: index.html
-        text: "Perennial Pepperweed Mapping"
+        text: Report
       - icon: github
         href: https://github.com/inyo-gov/noxious-weeds
-    background: dark
     search: true
+
 format:
   html:
-    theme: bootstrap
-    linkcolor: "#2E86AB"
-    css: styles.css
-    toc: false
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-location: right
     code-fold: true
     code-tools: true
     fig-responsive: true
-    table-responsive: false
+    css: styles.css
     fig-dir: figure-html
-    subtitle: "Inyo County, California"
     footer: "© 2025 Inyo County, California. All rights reserved."

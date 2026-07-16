@@ -1,6 +1,6 @@
 ---
 title: "Perennial Pepperweed Mapping"
-subtitle: "Noxious Weeds Monitoring 2025-2026 LORP Workplan"
+subtitle: "Noxious Weeds Monitoring — LORP FY 2026–27 ([approved workplan PDF](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf))"
 tbl-cap-location: top   
 affiliation: "Inyo County Water Department"
 date: today
@@ -20,9 +20,9 @@ format:
     theme: cosmo
     toc: true
     toc-depth: 3
+    toc-location: right
     code-fold: true
     code-tools: true
-    embed-resources: true
     css: styles.css
   docx:
     toc: true
@@ -51,6 +51,12 @@ library(DT)
 library(ggplot2)
 library(scales)
 library(httr)
+
+# Field abundance codes: 5, 15, 25, 100, 200 where 200 means ≥200 (often thousands)
+format_abundance <- function(x) {
+  ifelse(is.na(x), "Unknown",
+         ifelse(x >= 200, "200+ (may be thousands)", as.character(x)))
+}
 ```
 
 # Summary
@@ -164,6 +170,8 @@ The dataset includes `r nrow(pepper_data)` total observations across `r length(u
 
 The following interactive map shows pepperweed populations across all years (`r params$start_year`-`r params$current_year`). Use the layer controls in the top-right corner to toggle between different years. The map includes all `r nrow(pepper_data)` documented observations, with feature creation dates used when observation dates are unavailable.
 
+**Map layers:** purple **River channels** (multithreaded Owens River) and blue **High-water line** (June 2023 floodplain). Survey-gap polygons are deferred for now — use the tabular monitoring recommendations below.
+
 <div class="download-section">
 <h3>Data Downloads</h3>
 <div class="download-links">
@@ -241,11 +249,56 @@ reach_centroids <- river_reaches %>%
   st_centroid() %>%
   mutate(Reach_Label = gsub("LORP Reach ", "R", Name))
 
+# High-water floodplain + multithreaded river (reference layers)
+fp_geojson <- "exports/survey_nav_2026/lorp_highwater_floodplain.geojson"
+ch_geojson <- "exports/survey_nav_2026/owens_river_channels.geojson"
+if ((!file.exists(fp_geojson) || !file.exists(ch_geojson)) && file.exists("export_survey_nav.R")) {
+  system2("Rscript", "export_survey_nav.R", stdout = FALSE, stderr = FALSE)
+}
+floodplain <- NULL
+river_channels <- NULL
+if (file.exists(fp_geojson)) {
+  floodplain <- st_read(fp_geojson, quiet = TRUE) %>% st_transform(4326)
+}
+if (file.exists(ch_geojson)) {
+  river_channels <- st_read(ch_geojson, quiet = TRUE) %>% st_transform(4326)
+}
+
 # Create comprehensive map with all years
 combined_map <- leaflet(pepper_data) %>%
-  # Standard basemaps
   addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
-  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") %>%
+  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap")
+
+# June 2023 high-water floodplain (full extent)
+if (!is.null(floodplain) && nrow(floodplain) > 0) {
+  combined_map <- combined_map %>%
+    addPolygons(
+      data = floodplain,
+      fillColor = "#64b5f6",
+      fillOpacity = 0.18,
+      color = "#0d47a1",
+      weight = 2,
+      opacity = 0.9,
+      popup = ~paste0("<b>June 2023 high-water line</b><br>", Acres, " acres"),
+      group = "High-water line",
+      options = pathOptions(clickable = TRUE)
+    )
+}
+
+# Multithreaded Owens River channels
+if (!is.null(river_channels) && nrow(river_channels) > 0) {
+  combined_map <- combined_map %>%
+    addPolylines(
+      data = river_channels,
+      color = "#4527a0",
+      weight = 3,
+      opacity = 0.95,
+      popup = ~paste0("<b>Owens River channel</b><br>", ifelse(is.na(NAME), "", NAME)),
+      group = "River channels"
+    )
+}
+
+combined_map <- combined_map %>%
   # Add 2018 markers
   addCircleMarkers(
     data = pepper_2018,
@@ -259,7 +312,7 @@ combined_map <- leaflet(pepper_data) %>%
         "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
         "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
         "Species: ", Species, "<br>",
-        "Abundance: ", Abundance, "<br>",
+        "Abundance: ", format_abundance(Abundance), "<br>",
         "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
         ifelse(exists("Name") && !is.na(Name), paste0("LORP Reach: ", Name, "<br>"), ""),
         "Notes: ", ifelse(is.na(Notes), "None", Notes)
@@ -279,7 +332,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -298,7 +351,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -317,7 +370,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -336,7 +389,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -355,7 +408,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -374,7 +427,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
     ),
@@ -393,7 +446,7 @@ combined_map <- leaflet(pepper_data) %>%
       "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
       "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
       "Species: ", Species, "<br>",
-      "Abundance: ", Abundance, "<br>",
+      "Abundance: ", format_abundance(Abundance), "<br>",
       "Height: ", ifelse(is.na(Height), "Unknown", paste(Height, "m")), "<br>",
       ifelse(exists("Name") && !is.na(Name), paste0("LORP Reach: ", Name, "<br>"), ""),
       "Notes: ", ifelse(is.na(Notes), "None", Notes)
@@ -431,17 +484,27 @@ combined_map <- leaflet(pepper_data) %>%
       )
     ),
     group = "Reach Labels"
-  ) %>%
+  )
+
+overlay_groups <- c(
+  if (!is.null(floodplain) && nrow(floodplain) > 0) "High-water line",
+  if (!is.null(river_channels) && nrow(river_channels) > 0) "River channels",
+  "2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data",
+  "2023 Data", "2024 Data", "2025 Data", "Reach Labels",
+  if (nrow(wq_stations) > 0) "Water Quality Stations"
+)
+
+combined_map <- combined_map %>%
   addLayersControl(
     baseGroups = c("World Imagery", "OpenStreetMap"),
-    overlayGroups = c("2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data", "2023 Data", "2024 Data", "2025 Data", "Reach Labels", if(nrow(wq_stations) > 0) "Water Quality Stations"),
+    overlayGroups = overlay_groups,
     options = layersControlOptions(collapsed = FALSE)
   ) %>%
   addLegend(
-    position = "bottomright",
+    position = "bottomleft",
     colors = c("black", "darkred", "red", "yellow", "orange", "green", "blue", "purple", if(nrow(wq_stations) > 0) "blue"),
     labels = c("2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", if(nrow(wq_stations) > 0) "WQ Stations"),
-    title = "Pepperweed Distribution by Year"
+    title = "Detected and reported per year"
   )
 
 combined_map
@@ -449,7 +512,9 @@ combined_map
 
 ## `r params$current_year` Distribution - plants per site estimated from field observations
 
-The following histogram shows the distribution of abundance values for all pepperweed point locations documented in `r params$current_year`:
+Field abundance is recorded in discrete estimate classes (**5, 15, 25, 100, 200**). A value of **200 means ≥200 plants** — a lower bound for dense stands that may contain hundreds to thousands of individuals (not an exact count of 200).
+
+The following chart shows the distribution of these abundance classes for pepperweed sites documented in `r params$current_year`:
 
 ```{r abundance-histogram}
 #| message: false
@@ -461,19 +526,19 @@ pepper_current_year <- pepper_data %>%
 
 # Create abundance histogram
 if(nrow(pepper_current_year) > 0) {
-  # Create abundance bins (preserve all bins, exclude empty ones)
+  # Use field estimate classes (200 = 200+)
   abundance_data <- pepper_current_year %>%
     filter(!is.na(Abundance)) %>%
     mutate(
       Abundance_Bin = case_when(
-        Abundance <= 10 ~ "1-10",
-        Abundance <= 25 ~ "11-25", 
-        Abundance <= 50 ~ "26-50",
-        Abundance <= 100 ~ "51-100",
-        TRUE ~ ">100"
+        Abundance <= 5 ~ "5",
+        Abundance <= 15 ~ "15",
+        Abundance <= 25 ~ "25",
+        Abundance <= 100 ~ "100",
+        TRUE ~ "200+"
       ),
       Abundance_Bin = factor(Abundance_Bin,
-                            levels = c("1-10", "11-25", "26-50", "51-100", ">100"),
+                            levels = c("5", "15", "25", "100", "200+"),
                             ordered = TRUE)
     )
   
@@ -487,16 +552,17 @@ if(nrow(pepper_current_year) > 0) {
     geom_bar(stat = "identity", fill = "#2E86AB", color = "white", alpha = 0.8, width = 0.7) +
     labs(
       title = paste("Distribution of Pepperweed Abundance in", params$current_year),
-      subtitle = paste("Total sites:", nrow(pepper_current_year)),
-      x = "Abundance Range (plants)",
+      subtitle = paste("Total sites:", nrow(pepper_current_year),
+                       "· Class 200+ = ≥200 plants (may be thousands)"),
+      x = "Abundance class (field estimate)",
       y = "Number of Sites"
     ) +
     theme_minimal() +
     theme(
       plot.title = element_text(size = 16, face = "bold", color = "#2E86AB"),
-      plot.subtitle = element_text(size = 14, color = "#666666"),
+      plot.subtitle = element_text(size = 12, color = "#666666"),
       axis.title = element_text(size = 12),
-      axis.text.x = element_text(angle = 45, hjust = 1),
+      axis.text.x = element_text(angle = 0, hjust = 0.5),
       panel.grid.minor = element_blank(),
       panel.grid.major.x = element_blank()
     ) +
@@ -505,26 +571,27 @@ if(nrow(pepper_current_year) > 0) {
   print(hist_plot)
   
   # Management categories
-  small_pops <- sum(pepper_current_year$Abundance <= 100, na.rm = TRUE)
-  large_pops <- sum(pepper_current_year$Abundance > 100, na.rm = TRUE)
+  small_pops <- sum(pepper_current_year$Abundance < 200, na.rm = TRUE)
+  large_pops <- sum(pepper_current_year$Abundance >= 200, na.rm = TRUE)
   
   cat("###", params$current_year, "Site Distribution\n")
   cat("- **Total Sites**:", nrow(pepper_current_year), "\n")
-  cat("- **Small Sites (≤ 100 plants)**:", small_pops, "sites (", round(small_pops/nrow(pepper_current_year)*100, 1), "%)\n")
-  cat("- **Large Sites (> 100 plants)**:", large_pops, "sites (", round(large_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  cat("- **Sites below 200 class**:", small_pops, "(", round(small_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  cat("- **Sites in 200+ class (≥200 plants; may be thousands)**:", large_pops, "(", round(large_pops/nrow(pepper_current_year)*100, 1), "%)\n")
   
   # Detailed bin counts
   cat("\n### Detailed Abundance Distribution\n")
   for(i in 1:nrow(abundance_counts)) {
-    bin_name <- abundance_counts$Abundance_Bin[i]
+    bin_name <- as.character(abundance_counts$Abundance_Bin[i])
     bin_count <- abundance_counts$n[i]
-    cat("- **", bin_name, " plants**: ", bin_count, " sites\n", sep = "")
+    label <- if (bin_name == "200+") "200+ plants (≥200; may be thousands)" else paste0(bin_name, " plants (estimate class)")
+    cat("- **", label, "**: ", bin_count, " sites\n", sep = "")
   }
   
   # Range information
-  cat("\n### Abundance Range\n")
-  cat("- **Minimum**:", min(pepper_current_year$Abundance, na.rm = TRUE), "plants\n")
-  cat("- **Maximum**:", max(pepper_current_year$Abundance, na.rm = TRUE), "plants\n")
+  cat("\n### Abundance coding\n")
+  cat("- Field classes used: **5, 15, 25, 100, 200**\n")
+  cat("- **200 = 200 or more** — dense patches are not counted stem-by-stem and can represent thousands of individuals\n")
 } else {
   cat("No", params$current_year, "data available for abundance analysis.\n")
 }
@@ -539,11 +606,12 @@ The interactive map above provides the primary visualization of pepperweed distr
 #| warning: false
 
 # Show all recent sites (2024-2025) - prioritize small sites for early intervention
+# Sort by numeric abundance, then format for display (200 = 200+)
 recent_sites <- pepper_data %>%
   filter(Year_Display >= 2024) %>%
-  select(Date_Display, Abundance, Height, Notes, Year_Display) %>%
-  # Sort by abundance (smallest first) to prioritize satellite sites
-  arrange(Abundance, desc(Year_Display))
+  arrange(Abundance, desc(Year_Display)) %>%
+  mutate(Abundance = format_abundance(Abundance)) %>%
+  select(Date_Display, Abundance, Height, Notes, Year_Display)
 
 if(nrow(recent_sites) > 0) {
   datatable(recent_sites,
@@ -569,7 +637,7 @@ if(nrow(recent_sites) > 0) {
 - Data represents documented observations only
 - Population estimates may vary based on survey timing and conditions
 - Some areas may be under-sampled due to access constraints
-- Abundance categories are based on field estimates
+- Abundance is recorded in field estimate classes (**5, 15, 25, 100, 200**); **200 means ≥200 plants** and dense stands may contain thousands of individuals
 
 # River Reach Analysis
 
@@ -808,6 +876,414 @@ cat("\n**Most Occupied Reach**:", reach_summary$Name[1], "(", reach_summary$Avg_
 cat("**Least Occupied Reach**:", reach_summary$Name[nrow(reach_summary)], "(", reach_summary$Avg_Occupancy[nrow(reach_summary)], "% average)\n")
 ```
 
+## Cumulative Discovery and Occupancy Forecasts
+
+Annual occupancy fluctuates with survey effort. A more informative metric for the “more you look, the more you find” pattern is **cumulative discovery**: the share of corridor segments that have ever had a detection. Pepperweed is already widespread on adjacent conveyances and upper-river reaches, so the planning question is when known occupancy along the LORP corridor approaches saturation.
+
+### Cumulative Discovery by Year
+
+Once a segment or river mile has a detection, it remains in the cumulative total. This isolates discovery/spread from year-to-year survey intensity.
+
+```{r occupancy-forecast}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+# Cumulative discovery: first year each 0.1-mi segment was detected
+first_detect_seg <- pepper_data_with_segments %>%
+  group_by(Segment_ID) %>%
+  summarise(FirstYear = min(Year_Display), .groups = "drop")
+
+# Cumulative discovery at whole-mile resolution
+first_detect_mile <- pepper_data_with_segments %>%
+  mutate(Mile = floor(RiverMile)) %>%
+  group_by(Mile) %>%
+  summarise(FirstYear = min(Year_Display), .groups = "drop")
+
+obs_years <- sort(unique(pepper_data_with_segments$Year_Display))
+n_miles_corridor <- length(0:60)  # 61 whole miles
+
+cum_occupancy <- data.frame(
+  Year = obs_years,
+  Segments_Known = sapply(obs_years, function(y) sum(first_detect_seg$FirstYear <= y)),
+  Miles_Known = sapply(obs_years, function(y) sum(first_detect_mile$FirstYear <= y))
+) %>%
+  mutate(
+    Seg_Pct = round(Segments_Known / total_segments * 100, 1),
+    Mile_Pct = round(Miles_Known / n_miles_corridor * 100, 1),
+    New_Segments = Segments_Known - lag(Segments_Known, default = 0),
+    New_Miles = Miles_Known - lag(Miles_Known, default = 0)
+  )
+
+print(kable(cum_occupancy %>% select(Year, Segments_Known, New_Segments, Seg_Pct, Miles_Known, New_Miles, Mile_Pct),
+            col.names = c("Year", "Segments Known", "New Segments", "Segment %", "Miles Known", "New Miles", "Mile %"),
+            align = c("c", "c", "c", "c", "c", "c", "c"),
+            caption = "Cumulative pepperweed discovery along the LORP corridor (0.1-mi segments and whole river miles)"))
+
+# --- Forecast helpers ---
+# Linear: p = a + b * year  (extrapolate to 100)
+# Asymptotic (negative exponential to K=100): p = K * (1 - exp(-r * (year - t0)))
+# Logistic to K=100: p = K / (1 + exp(-r * (year - t_mid)))
+
+fit_linear_to_100 <- function(years, pct, label) {
+  fit <- lm(pct ~ years)
+  a <- coef(fit)[1]
+  b <- coef(fit)[2]
+  year_100 <- if (b > 0) (100 - a) / b else Inf
+  list(label = label, model = "Linear", a = a, b = b, year_100 = year_100, fit = fit,
+       predict = function(y) pmin(100, pmax(0, a + b * y)))
+}
+
+fit_asymptotic_to_100 <- function(years, pct, label, K = 100) {
+  # p = K * (1 - exp(-r * (t - t0))); constrain t0 near first year, fit r
+  obj <- function(par) {
+    r <- exp(par[1])  # > 0
+    t0 <- par[2]
+    pred <- K * (1 - exp(-r * (years - t0)))
+    sum((pct - pred)^2)
+  }
+  starts <- list(
+    c(log(0.05), min(years) - 1),
+    c(log(0.08), min(years) - 2),
+    c(log(0.03), min(years)),
+    c(log(0.1), min(years) - 3)
+  )
+  best <- NULL
+  best_sse <- Inf
+  for (s in starts) {
+    opt <- tryCatch(
+      optim(s, obj, method = "L-BFGS-B",
+            lower = c(log(1e-4), min(years) - 20),
+            upper = c(log(1), max(years))),
+      error = function(e) NULL
+    )
+    if (!is.null(opt) && opt$value < best_sse) {
+      best_sse <- opt$value
+      best <- opt
+    }
+  }
+  r <- exp(best$par[1])
+  t0 <- best$par[2]
+  # year when p reaches target: t = t0 - log(1 - target/K) / r
+  year_at <- function(target) t0 - log(1 - target / K) / r
+  list(label = label, model = "Asymptotic (→100%)", r = r, t0 = t0, year_100 = Inf,
+       year_99 = year_at(99), year_95 = year_at(95), year_90 = year_at(90),
+       predict = function(y) K * (1 - exp(-r * (y - t0))))
+}
+
+fit_logistic_to_100 <- function(years, pct, label, K = 100) {
+  # p = K / (1 + exp(-r * (t - t_mid)))
+  obj <- function(par) {
+    r <- exp(par[1])
+    t_mid <- par[2]
+    pred <- K / (1 + exp(-r * (years - t_mid)))
+    sum((pct - pred)^2)
+  }
+  # Multiple starts — early-phase series are sensitive to initial midpoint
+  starts <- list(
+    c(log(0.2), mean(years)),
+    c(log(0.15), max(years) + 3),
+    c(log(0.25), max(years) + 5),
+    c(log(0.1), max(years) + 10),
+    c(log(0.3), max(years))
+  )
+  best <- NULL
+  best_sse <- Inf
+  for (s in starts) {
+    opt <- tryCatch(
+      optim(s, obj, method = "L-BFGS-B",
+            lower = c(log(1e-4), min(years) - 5),
+            upper = c(log(1), max(years) + 80)),
+      error = function(e) NULL
+    )
+    if (!is.null(opt) && opt$value < best_sse) {
+      best_sse <- opt$value
+      best <- opt
+    }
+  }
+  r <- exp(best$par[1])
+  t_mid <- best$par[2]
+  year_at <- function(target) t_mid - log(K / target - 1) / r
+  list(label = label, model = "Logistic (K=100%)", r = r, t_mid = t_mid, sse = best_sse,
+       year_50 = year_at(50), year_90 = year_at(90), year_95 = year_at(95),
+       year_99 = year_at(99), year_100 = Inf,
+       predict = function(y) K / (1 + exp(-r * (y - t_mid))))
+}
+
+# Fit both resolutions
+seg_lin <- fit_linear_to_100(cum_occupancy$Year, cum_occupancy$Seg_Pct, "0.1-mi segments")
+seg_asy <- fit_asymptotic_to_100(cum_occupancy$Year, cum_occupancy$Seg_Pct, "0.1-mi segments")
+seg_log <- fit_logistic_to_100(cum_occupancy$Year, cum_occupancy$Seg_Pct, "0.1-mi segments")
+
+mile_lin <- fit_linear_to_100(cum_occupancy$Year, cum_occupancy$Mile_Pct, "Whole river miles")
+mile_asy <- fit_asymptotic_to_100(cum_occupancy$Year, cum_occupancy$Mile_Pct, "Whole river miles")
+mile_log <- fit_logistic_to_100(cum_occupancy$Year, cum_occupancy$Mile_Pct, "Whole river miles")
+
+# Horizon years for plot
+last_obs <- max(cum_occupancy$Year)
+# Recent-trajectory scenario: whole-mile slope over last ~2 years
+# (hypothesis: limited annual survey understates ubiquity; recent discovery rate continues)
+recent_miles <- cum_occupancy %>% filter(Year >= last_obs - 2)
+mile_recent_fit <- lm(Mile_Pct ~ Year, data = recent_miles)
+mile_recent_rate <- coef(mile_recent_fit)[2]
+mile_recent_a <- coef(mile_recent_fit)[1]
+mile_recent_year_100 <- if (mile_recent_rate > 0) (100 - mile_recent_a) / mile_recent_rate else Inf
+mile_recent_predict <- function(y) pmin(100, pmax(0, mile_recent_a + mile_recent_rate * y))
+
+# Extend far enough to show approach to 100% for mile-scale logistic/linear
+horizon_end <- max(
+  ceiling(mile_lin$year_100) + 2,
+  ceiling(seg_lin$year_100) + 2,
+  ceiling(mile_log$year_99) + 5,
+  ceiling(seg_log$year_99) + 5,
+  ceiling(mile_recent_year_100) + 2,
+  last_obs + 25
+)
+horizon_end <- min(horizon_end, last_obs + 80)  # cap plot range
+forecast_years <- seq(min(cum_occupancy$Year), horizon_end, by = 1)
+
+# Build forecast table of milestone years
+milestone_row <- function(fit_lin, fit_asy, fit_log, resolution) {
+  year_lin <- function(target) {
+    y <- (target - fit_lin$a) / fit_lin$b
+    if (!is.finite(y) || fit_lin$b <= 0) return(NA_real_)
+    y
+  }
+  data.frame(
+    Resolution = resolution,
+    Metric = c("50%", "75%", "90%", "95%", "99%", "100% (linear only)"),
+    Linear = round(c(year_lin(50), year_lin(75), year_lin(90), year_lin(95), year_lin(99), fit_lin$year_100), 1),
+    Asymptotic = round(c(
+      fit_asy$t0 - log(1 - 50/100) / fit_asy$r,
+      fit_asy$t0 - log(1 - 75/100) / fit_asy$r,
+      fit_asy$year_90,
+      fit_asy$year_95,
+      fit_asy$year_99,
+      NA_real_
+    ), 1),
+    Logistic = round(c(
+      fit_log$year_50,
+      fit_log$t_mid - log(100/75 - 1) / fit_log$r,
+      fit_log$year_90,
+      fit_log$year_95,
+      fit_log$year_99,
+      NA_real_
+    ), 1)
+  )
+}
+
+milestones <- bind_rows(
+  milestone_row(seg_lin, seg_asy, seg_log, "0.1-mi segments"),
+  milestone_row(mile_lin, mile_asy, mile_log, "Whole river miles")
+)
+
+# Horizontal lag: years until segment occupancy catches a given mile occupancy level
+# (time to "infill" every 0.1-mi subsegment once whole miles reach that level)
+year_at_logistic <- function(fit, target, K = 100) {
+  if (target >= K) return(Inf)
+  if (target <= 0) return(-Inf)
+  fit$t_mid - log(K / target - 1) / fit$r
+}
+
+infill_levels <- c(50, 75, 90)
+infill_gaps <- data.frame(
+  Occupancy = paste0(infill_levels, "%"),
+  Year_WholeMile = round(vapply(infill_levels, function(p) year_at_logistic(mile_log, p), numeric(1)), 1),
+  Year_Segment = round(vapply(infill_levels, function(p) year_at_logistic(seg_log, p), numeric(1)), 1)
+) %>%
+  mutate(
+    Lag_Years = round(Year_Segment - Year_WholeMile, 1),
+    Interpretation = paste0("~", Lag_Years, " yr to fill 0.1-mi gaps after whole miles hit ", Occupancy)
+  )
+
+# Model fit summary text (emitted after tables)
+fit_summary_md <- paste0(
+  "\n#### Model Fit Summary\n\n",
+  sprintf("- **Segment linear**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+          seg_lin$b, seg_lin$year_100),
+  sprintf("- **Mile linear (full series)**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+          mile_lin$b, mile_lin$year_100),
+  sprintf("- **Mile recent trajectory (last 2 yr)**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+          mile_recent_rate, mile_recent_year_100),
+  sprintf("- **Segment logistic**: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
+          seg_log$year_50, seg_log$year_95),
+  sprintf("- **Mile logistic**: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
+          mile_log$year_50, mile_log$year_95),
+  sprintf("\n**Current cumulative occupancy (%.0f)**: %.1f%% of 0.1-mi segments; %.1f%% of whole river miles.\n",
+          last_obs,
+          cum_occupancy$Seg_Pct[cum_occupancy$Year == last_obs],
+          cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs])
+)
+```
+
+### Forecast to Corridor Saturation
+
+Models fit to cumulative occupancy and projected forward:
+
+- **Linear** — constant annual discovery rate; reaches 100% in finite time.
+- **Asymptotic** — approaches 100% with diminishing returns (classic discovery / sampling plateau).
+- **Logistic** — S-curve to a 100% carrying capacity; slows as unoccupied corridor shrinks.
+- **Recent trajectory (whole miles)** — slope from the last two survey years only; tests the hypothesis that pepperweed is already more ubiquitous than the full-series fit implies, and limited annual effort is still revealing occupied miles quickly.
+
+Pepperweed is already common on nearby ditches, streams, and upper-river reaches; these forecasts treat the LORP corridor as filling toward full known occupancy under continued survey and/or spread.
+
+```{r occupancy-forecast-tables}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+print(kable(milestones,
+            col.names = c("Resolution", "Occupancy Milestone", "Linear", "Asymptotic", "Logistic"),
+            align = c("l", "l", "c", "c", "c"),
+            caption = "Projected calendar year when cumulative occupancy reaches each milestone (fit to 2018–2025 discovery)"))
+```
+
+#### Infill lag (whole mile → 0.1-mi segment)
+
+The **horizontal gap** between the blue (whole-mile) and red (0.1-mi) logistic curves is the years of additional discovery needed to occupy every subsegment once whole-mile occupancy has already reached that level.
+
+```{r occupancy-forecast-infill}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+print(kable(infill_gaps,
+            col.names = c("Occupancy level", "Whole-mile year", "0.1-mi year", "Lag (yr)", "Interpretation"),
+            align = c("c", "c", "c", "c", "l"),
+            caption = "Time lag between whole-mile and subsegment occupancy (logistic forecasts)"))
+
+cat(fit_summary_md)
+```
+
+```{r occupancy-forecast-plot}
+#| message: false
+#| warning: false
+#| fig-width: 12
+#| fig-height: 7
+plot_df_obs <- cum_occupancy %>%
+  select(Year, Seg_Pct, Mile_Pct) %>%
+  pivot_longer(-Year, names_to = "Series", values_to = "Pct") %>%
+  mutate(Series = recode(Series, Seg_Pct = "0.1-mi segments (observed)", Mile_Pct = "Whole miles (observed)"),
+         Type = "Observed")
+
+make_forecast_df <- function(years, pred_fn, series_name) {
+  data.frame(Year = years, Pct = pred_fn(years), Series = series_name, Type = "Forecast")
+}
+
+# Recent scenario only from last observed year forward (avoid rewriting history)
+recent_years <- seq(last_obs, max(horizon_end, ceiling(mile_recent_year_100) + 1), by = 1)
+
+plot_df_fc <- bind_rows(
+  make_forecast_df(forecast_years, seg_lin$predict, "0.1-mi segments — linear"),
+  make_forecast_df(forecast_years, seg_log$predict, "0.1-mi segments — logistic"),
+  make_forecast_df(forecast_years, mile_lin$predict, "Whole miles — linear"),
+  make_forecast_df(forecast_years, mile_log$predict, "Whole miles — logistic"),
+  make_forecast_df(recent_years, mile_recent_predict, "Whole miles — recent trajectory")
+)
+
+# Annotation segments for infill lag at selected occupancy levels
+annot_levels <- c(50, 75)
+annot_df <- data.frame(
+  Pct = annot_levels,
+  x_mile = vapply(annot_levels, function(p) year_at_logistic(mile_log, p), numeric(1)),
+  x_seg = vapply(annot_levels, function(p) year_at_logistic(seg_log, p), numeric(1))
+) %>%
+  mutate(
+    lag = x_seg - x_mile,
+    label = sprintf("+%.0f yr to fill\n0.1-mi gaps", lag),
+    x_mid = (x_mile + x_seg) / 2
+  )
+
+forecast_plot <- ggplot() +
+  geom_hline(yintercept = 100, linetype = "dotted", color = "grey50") +
+  geom_hline(yintercept = annot_levels, linetype = "dotted", color = "grey80") +
+  # Infill-lag brackets (horizontal distance between logistic curves)
+  geom_segment(
+    data = annot_df,
+    aes(x = x_mile, xend = x_seg, y = Pct, yend = Pct),
+    color = "#5d6d7e",
+    linewidth = 0.7,
+    arrow = arrow(ends = "both", length = unit(0.12, "inches"))
+  ) +
+  geom_text(
+    data = annot_df,
+    aes(x = x_mid, y = Pct, label = label),
+    vjust = -0.4,
+    size = 3.2,
+    color = "#34495e",
+    fontface = "italic",
+    lineheight = 0.95
+  ) +
+  geom_line(data = plot_df_fc %>% filter(grepl("linear", Series) & !grepl("recent", Series)),
+            aes(x = Year, y = Pct, color = Series), linewidth = 0.9, linetype = "dashed") +
+  geom_line(data = plot_df_fc %>% filter(grepl("logistic", Series)),
+            aes(x = Year, y = Pct, color = Series), linewidth = 0.9, linetype = "solid") +
+  geom_line(data = plot_df_fc %>% filter(grepl("recent", Series)),
+            aes(x = Year, y = Pct, color = Series), linewidth = 1.15, linetype = "dotdash") +
+  geom_point(data = plot_df_obs, aes(x = Year, y = Pct, color = Series), size = 2.5) +
+  geom_line(data = plot_df_obs, aes(x = Year, y = Pct, color = Series), linewidth = 1.1) +
+  # Mark recent-scenario 100% year
+  {
+    if (is.finite(mile_recent_year_100) && mile_recent_year_100 <= horizon_end) {
+      list(
+        geom_vline(xintercept = mile_recent_year_100, linetype = "dotted", color = "#6c3483", alpha = 0.7),
+        annotate(
+          "text",
+          x = mile_recent_year_100,
+          y = 8,
+          label = sprintf("Recent traj.\n→ 100%% ~%.0f", mile_recent_year_100),
+          hjust = -0.05,
+          size = 3,
+          color = "#6c3483"
+        )
+      )
+    } else {
+      list()
+    }
+  } +
+  scale_y_continuous(limits = c(0, 105), breaks = seq(0, 100, 25),
+                     labels = function(x) paste0(x, "%")) +
+  scale_x_continuous(breaks = pretty(forecast_years, n = 8)) +
+  scale_color_manual(values = c(
+    "0.1-mi segments (observed)" = "#c0392b",
+    "Whole miles (observed)" = "#1a5276",
+    "0.1-mi segments — linear" = "#e74c3c",
+    "0.1-mi segments — logistic" = "#922b21",
+    "Whole miles — linear" = "#3498db",
+    "Whole miles — logistic" = "#1a5276",
+    "Whole miles — recent trajectory" = "#6c3483"
+  )) +
+  labs(
+    title = "Cumulative Pepperweed Occupancy — Observed and Forecast to 100%",
+    subtitle = "Solid = logistic; dashed = full-series linear; dot-dash = recent 2-yr whole-mile trajectory\nGrey brackets = years to fill 0.1-mi subsegments after whole miles reach that occupancy",
+    x = "Year",
+    y = "Cumulative occupancy",
+    color = NULL
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "vertical",
+    plot.title = element_text(face = "bold"),
+    plot.subtitle = element_text(size = 10),
+    panel.grid.minor = element_blank()
+  ) +
+  guides(color = guide_legend(ncol = 2))
+
+print(forecast_plot)
+```
+
+### Interpretation
+
+`r paste0("- **Whole-mile occupancy** is already high (~", cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs], "% known), consistent with pepperweed being fairly ubiquitous along the corridor at coarse scale.")`
+
+`r paste0("- **0.1-mile occupancy** remains lower (~", cum_occupancy$Seg_Pct[cum_occupancy$Year == last_obs], "%). The annotated horizontal gaps are the expected years of additional surveying/spread before every subsegment is known occupied at that same occupancy level.")`
+
+`r sprintf("- **Recent-trajectory scenario**: using only %.0f–%.0f whole-mile discovery (+%.1f pp/yr), cumulative mile occupancy reaches 100%% around **%.0f**. This is the “already ubiquitous / under-surveyed” case — if the last two years’ pace continues, known whole-mile occupancy saturates almost immediately relative to the full-series logistic.", min(recent_miles$Year), max(recent_miles$Year), mile_recent_rate, mile_recent_year_100)`
+
+- Full-series linear/logistic forecasts are slower and more consistent with a sampling plateau; the recent trajectory is an upper-bound discovery scenario, not a separate biological invasion model.
+- Increased RAS effort in currently empty miles (see Monitoring Recommendations) will accelerate cumulative discovery even without new colonization.
+
 # River Mile Analysis
 
 ```{r river-mile-analysis}
@@ -997,6 +1473,284 @@ if(nrow(river_mile_summary) > 0) {
 }
 ```
 
+# 2026 Monitoring Recommendations
+
+The [FY 2026–2027 LORP work plan](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf) directs summer RAS (rapid assessment survey) monitoring to focus on areas **without known pepperweed populations**. Study-design crosswalk: [`lorp-pia-completion` Doc 11](https://github.com/inyo-gov/lorp-pia-completion/blob/main/docs/11_fy2627_approved_workplan_reference.md). The tables below are derived from `r params$start_year`–`r params$current_year` occurrence data binned to whole river miles (see [River Mile Analysis](#river-mile-analysis)).
+
+## Priority Survey Areas
+
+River-mile segments with **no pepperweed detections on the river corridor** in any survey year (`r params$start_year`–`r params$current_year`). Only sites within 250 m of a river-mile marker count toward occupancy (off-channel ditch/field points are excluded so they do not falsely mark a mile as occupied). These align with the workplan objective to survey unoccupied corridor.
+
+```{r monitoring-recommendations}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+# Ensure river-mile assignments exist
+if (!exists("pepper_data_with_rivermiles")) {
+  if (!exists("rivermiles")) {
+    rivermiles <- st_read("data/LORP_RiverMiles_revised.shp", quiet = TRUE) %>%
+      mutate(RiverMile = as.numeric(NAME)) %>%
+      st_transform(st_crs(pepper_data))
+  }
+  pepper_data_with_rivermiles <- pepper_data %>%
+    st_join(rivermiles %>% select(NAME), join = st_nearest_feature) %>%
+    rename(RiverMile = NAME)
+}
+
+if (!exists("river_reaches")) {
+  reach_url <- "https://inyocounty.maps.arcgis.com/sharing/rest/content/items/90e5870bd5914a928bd97b023f07b807/data"
+  river_reaches <- st_read(reach_url, quiet = TRUE) %>%
+    filter(Name %in% paste0("LORP Reach ", 1:6)) %>%
+    st_transform(st_crs(pepper_data))
+}
+
+mile_range <- 0:60
+corridor_max_m <- 250  # exclude off-channel sites snapped to a river mile from far away
+
+# Distance to nearest river-mile marker (meters)
+rm_utm <- st_transform(rivermiles, 32611)
+pepper_utm <- st_transform(pepper_data_with_rivermiles, 32611)
+nn_idx <- st_nearest_feature(pepper_utm, rm_utm)
+corridor_dist_m <- as.numeric(st_distance(pepper_utm, rm_utm[nn_idx, ], by_element = TRUE))
+
+pepper_corridor <- pepper_data_with_rivermiles %>%
+  mutate(
+    RiverMile_Binned = floor(as.numeric(RiverMile)),
+    dist_m = corridor_dist_m
+  ) %>%
+  filter(dist_m <= corridor_max_m)
+
+detected_miles <- pepper_corridor %>%
+  st_drop_geometry() %>%
+  distinct(RiverMile_Binned) %>%
+  pull(RiverMile_Binned)
+
+never_detected_miles <- setdiff(mile_range, detected_miles)
+
+group_contiguous_miles <- function(miles) {
+  if (length(miles) == 0) {
+    return(data.frame())
+  }
+  miles <- sort(miles)
+  starts <- miles[c(1, which(diff(miles) > 1) + 1)]
+  ends <- miles[c(which(diff(miles) > 1), length(miles))]
+  data.frame(RM_Start = starts, RM_End = ends)
+}
+
+survey_segments <- group_contiguous_miles(never_detected_miles)
+
+# Assign reach from mile-marker polygons
+mile_reach_lookup <- rivermiles %>%
+  st_join(river_reaches %>% select(Name), join = st_nearest_feature) %>%
+  st_drop_geometry() %>%
+  select(RiverMile, Name)
+
+get_reach_for_mile <- function(mile) {
+  idx <- which.min(abs(mile_reach_lookup$RiverMile - mile))
+  gsub("LORP Reach ", "R", mile_reach_lookup$Name[idx])
+}
+
+if (nrow(survey_segments) > 0) {
+  survey_segments <- survey_segments %>%
+    mutate(
+      RM_Range = ifelse(RM_Start == RM_End,
+                        paste0("RM ", RM_Start),
+                        paste0("RM ", RM_Start, "–", RM_End)),
+      Length_Miles = RM_End - RM_Start + 1,
+      Reach = vapply((RM_Start + RM_End) / 2, get_reach_for_mile, character(1)),
+      Priority = case_when(
+        Length_Miles >= 5 ~ "High",
+        Length_Miles >= 2 ~ "Medium",
+        TRUE ~ "Low"
+      ),
+      Survey_Note = "No known populations (all years)",
+      Bank_Guidance = "Survey both banks"
+    ) %>%
+    arrange(desc(Length_Miles), RM_Start)
+
+  survey_table <- survey_segments %>%
+    select(Priority, RM_Range, Length_Miles, Reach, Survey_Note, Bank_Guidance)
+
+  print(kable(survey_table,
+              col.names = c("Priority", "River Mile Range", "Length (mi)", "Reach", "Population Status", "Bank Guidance"),
+              align = c("l", "l", "c", "c", "l", "l"),
+              caption = paste0("Recommended 2026 RAS survey segments without known pepperweed (n = ",
+                               length(never_detected_miles), " river miles, ",
+                               round(100 * length(never_detected_miles) / length(mile_range), 1), "% of 0–60 RM corridor)")))
+} else {
+  cat("All river miles in the 0–60 corridor have at least one historical detection.\n")
+}
+```
+
+`r if (exists("never_detected_miles") && length(never_detected_miles) > 0) paste0("**Summary:** ", length(never_detected_miles), " of ", length(mile_range), " river miles (", round(100 * length(never_detected_miles) / length(mile_range), 1), "%) have no recorded pepperweed on the corridor (within 250 m of a river-mile marker).")`
+
+## East / West Bank Planning Notes
+
+Historical surveys do not record bank side in the feature service. For planning purposes, site coordinates were classified as **east** or **west** of the river centerline using the local channel direction at each river mile.
+
+- **Unoccupied miles** (table above): survey **both banks** — absence of detections does not indicate which bank was visited.
+- **Partially occupied miles** (table below): where all detections fall on one bank, the opposite bank may warrant targeted survey even though populations are known nearby.
+
+```{r monitoring-one-bank}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+rivermiles_xy <- rivermiles %>%
+  mutate(
+    lon = st_coordinates(geometry)[, 1],
+    lat = st_coordinates(geometry)[, 2]
+  ) %>%
+  st_drop_geometry() %>%
+  arrange(RiverMile)
+
+get_bank <- function(site_lon, site_lat, mile) {
+  idx <- which(rivermiles_xy$RiverMile == mile)
+  if (length(idx) == 0) {
+    return(NA_character_)
+  }
+  idx <- idx[1]
+  if (idx < nrow(rivermiles_xy)) {
+    dx <- rivermiles_xy$lon[idx + 1] - rivermiles_xy$lon[idx]
+    dy <- rivermiles_xy$lat[idx + 1] - rivermiles_xy$lat[idx]
+  } else {
+    dx <- rivermiles_xy$lon[idx] - rivermiles_xy$lon[idx - 1]
+    dy <- rivermiles_xy$lat[idx] - rivermiles_xy$lat[idx - 1]
+  }
+  vx <- site_lon - rivermiles_xy$lon[idx]
+  vy <- site_lat - rivermiles_xy$lat[idx]
+  cross <- dx * vy - dy * vx
+  ifelse(cross > 0, "East", "West")
+}
+
+site_coords <- st_coordinates(pepper_corridor)
+bank_summary <- pepper_corridor %>%
+  st_drop_geometry() %>%
+  mutate(
+    site_lon = site_coords[, 1],
+    site_lat = site_coords[, 2],
+    Bank = mapply(get_bank, site_lon, site_lat, RiverMile_Binned)
+  ) %>%
+  group_by(RiverMile_Binned) %>%
+  summarise(
+    Sites = n(),
+    East = sum(Bank == "East", na.rm = TRUE),
+    West = sum(Bank == "West", na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    Banks_Detected = case_when(
+      East > 0 & West > 0 ~ "Both",
+      East > 0 ~ "East only",
+      West > 0 ~ "West only",
+      TRUE ~ "Unknown"
+    ),
+    Opposite_Bank_To_Survey = case_when(
+      East > 0 & West == 0 ~ "West",
+      West > 0 & East == 0 ~ "East",
+      TRUE ~ NA_character_
+    ),
+    Reach = vapply(RiverMile_Binned, get_reach_for_mile, character(1))
+  )
+
+one_bank_gaps <- bank_summary %>%
+  filter(!is.na(Opposite_Bank_To_Survey)) %>%
+  arrange(RiverMile_Binned) %>%
+  mutate(
+    RM_Range = paste0("RM ", RiverMile_Binned),
+    Planning_Note = paste0("Detections on ", tolower(Banks_Detected), "; consider ", Opposite_Bank_To_Survey, " bank")
+  ) %>%
+  select(RM_Range, Reach, Sites, Banks_Detected, Opposite_Bank_To_Survey, Planning_Note)
+
+if (nrow(one_bank_gaps) > 0) {
+  print(kable(one_bank_gaps,
+              col.names = c("River Mile", "Reach", "Sites", "Banks w/ Detections", "Bank to Survey", "Planning Note"),
+              align = c("l", "c", "c", "l", "l", "l"),
+              caption = "River miles with detections on a single bank only (2018–2025)"))
+} else {
+  cat("No single-bank detection patterns were identified.\n")
+}
+```
+
+## Suggested 2026 Survey Sequence
+
+1. **Reach 6 lower corridor (RM 43–48, 51–52, 54–60)** — largest unoccupied segments; highest workplan priority.
+2. **Reach 3 gap miles (RM 21–22, 24)** — short unoccupied segments within otherwise occupied reach; efficient to cover during Reach 3 transit.
+3. **Single-bank follow-up** — optional targeted passes on the undetected bank at miles listed above, if crew capacity allows.
+
+## Access and Route Planning (next step)
+
+The current navigation polygons follow the **mainstem river-mile centerline** (±100 m). That is enough to flag *where* to look, but not *how* crews actually move:
+
+- **Secondary channels / side channels** often carry the walkable or boat-accessible path and may hold pepperweed even when the mapped mainstem mile looks empty.
+- **Prior RAS tracklogs** (Field Maps / Collector GPS tracks) show which banks and braids were reachable in past years — the practical route network for planning day sheets.
+
+**Recommended workflow once those layers are available:**
+
+1. Overlay secondary-channel lines + historical tracklogs on the 2026 gap polygons.
+2. Clip or redraw survey units to follow accessible routes (not axis-aligned mainstem boxes).
+3. Tag each unit with `Access` (mainstem / secondary / tracklog-only) and preferred entry points.
+4. Re-export the Field Maps layer so staff navigate along known paths through negative space.
+
+*Drop GPX/GeoJSON tracklogs or an AGOL item URL into `data/` (or share the service link) and this export can be rebuilt on those routes.*
+
+## Field Maps Navigation Layer
+**Area without RAS detections** = June 2023 [high-water](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_north/FeatureServer) floodplain ([south](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_south/FeatureServer) + north), split by river mile and bank, **minus** bank sides that already have pepperweed detections. The [multithreaded river](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/owens_river_feature/FeatureServer) is included as a reference layer.
+
+```{r survey-nav-export}
+#| message: false
+#| warning: false
+#| results: 'asis'
+
+export_script <- "export_survey_nav.R"
+if (file.exists(export_script)) {
+  status <- system2("Rscript", export_script, stdout = TRUE, stderr = TRUE)
+  dir.create("docs/exports", showWarnings = FALSE, recursive = TRUE)
+  for (f in c(
+    "ras_2026_survey_nav.geojson",
+    "ras_2026_survey_nav_shp.zip",
+    "lorp_highwater_floodplain.geojson",
+    "owens_river_channels.geojson",
+    "ras_2026_banks_with_detections.geojson"
+  )) {
+    src <- file.path("exports/survey_nav_2026", f)
+    if (file.exists(src)) {
+      file.copy(src, file.path("docs/exports", f), overwrite = TRUE)
+    }
+  }
+}
+
+nav_path <- "exports/survey_nav_2026/ras_2026_survey_nav.geojson"
+if (file.exists(nav_path)) {
+  nav <- sf::st_read(nav_path, quiet = TRUE)
+  nav_summary <- nav %>%
+    sf::st_drop_geometry() %>%
+    count(Priority, Bank, name = "Units") %>%
+    arrange(match(Priority, c("High", "Medium", "Low")), Bank)
+  total_ac <- round(sum(nav$Acres, na.rm = TRUE), 1)
+
+  cat("<div class=\"download-section\">\n")
+  cat("<h3>Download — area without RAS detections</h3>\n")
+  cat("<p>", nrow(nav), " units (~", total_ac, " acres): high-water floodplain on bank sides with <strong>zero</strong> pepperweed detections for that river mile.</p>\n", sep = "")
+  cat("<div class=\"download-links\">\n")
+  cat("<a href=\"exports/ras_2026_survey_nav_shp.zip\">Shapefile (zip) — Field Maps</a>\n")
+  cat("<a href=\"exports/ras_2026_survey_nav.geojson\">No-detection units GeoJSON</a>\n")
+  cat("<a href=\"exports/lorp_highwater_floodplain.geojson\">High-water floodplain</a>\n")
+  cat("<a href=\"exports/owens_river_channels.geojson\">River channels</a>\n")
+  cat("<a href=\"exports/ras_2026_banks_with_detections.geojson\">Banks with detections</a>\n")
+  cat("</div>\n")
+  cat("</div>\n\n")
+
+  print(kable(nav_summary,
+              col.names = c("Priority", "Bank", "Units"),
+              align = c("l", "l", "c"),
+              caption = "Area without RAS detections (high water − detected bank side)"))
+} else {
+  cat("Navigation layer not found. Run `Rscript export_survey_nav.R`.\n")
+}
+```
+
 # Field Documentation
 
 ```{r field-images}
@@ -1046,12 +1800,18 @@ display_attachment_image <- function(objectid, attachment_id, width = 500) {
   # Use cat to output HTML directly
   cat(html_content)
 }
+```
+
+## Field Documentation Images
+
+Pepperweed observations with field photos:
+
+```{r field-images-display}
+#| message: false
+#| warning: false
+#| results: 'asis'
 
 # Find features with attachments (check more features for up to 40 photos)
-cat("## Field Documentation Images\n")
-cat("Pepperweed observations with field photos:\n\n")
-
-# Check which features have attachments - look at more features to get up to 40 photos
 features_to_check <- pepper_data %>%
   filter(Year_Display >= params$current_year - 2) %>%  # Include last 2 years
   arrange(desc(Year_Display), desc(Abundance)) %>%
@@ -1084,7 +1844,7 @@ if(length(features_with_attachments) > 0) {
       
       # Display metadata below the image
       cat("<div style='text-align: center; margin-bottom: 30px;'>")
-      cat("<p><strong>Feature ID:</strong>", objectid, "| <strong>Date:</strong>", format(feature$Date_Display, "%Y-%m-%d"), "| <strong>Abundance:</strong>", feature$Abundance, "plants</p>")
+      cat("<p><strong>Feature ID:</strong>", objectid, "| <strong>Date:</strong>", format(feature$Date_Display, "%Y-%m-%d"), "| <strong>Abundance:</strong>", format_abundance(feature$Abundance), "</p>")
       
       # Include Notes if available
       if(!is.na(feature$Notes) && feature$Notes != "") {
