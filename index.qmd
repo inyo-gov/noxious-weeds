@@ -1,26 +1,42 @@
 ---
-title: "Perennial Pepperweed Mapping"
-subtitle: "Noxious Weeds Monitoring — LORP FY 2026–27 ([approved workplan PDF](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf))"
-tbl-cap-location: top   
-affiliation: "Inyo County Water Department"
+title: "Cumulative occupancy and corridor-scale discovery of perennial pepperweed (*Lepidium latifolium*) along the Lower Owens River Project"
+subtitle: "Technical data report · Inyo County Water Department · LORP rapid assessment survey, 2018–2025"
+author:
+  - name:
+      literal: "Inyo County Water Department"
+    affiliations:
+      - name: "Inyo County Water Department, Independence, California, United States"
+abstract: |
+  Perennial pepperweed (*Lepidium latifolium*) is a high-impact riparian invader whose corridor-scale rates of spread and discovery along the Lower Owens River Project (LORP) have remained largely unquantified. This technical report summarizes ArcGIS Online occurrence records from rapid assessment survey (RAS) monitoring (2018–2025), maps spatial patterns by reach and river mile, and estimates cumulative known occupancy at 0.1-mile and whole-mile   resolutions. Smooth (linear, logistic, recent-trajectory) and step-pulse (fast 6-year vs low-spread 12-year) forecasts describe the pace of known-occupancy infill under continued survey; a 0.1-mi cumulative heatmap shows corridor discovery geography. Interpretation emphasizes waterway-mediated pulse recruitment after flooding, with discovery lagged when flood years limit access. The report also identifies unoccupied corridor segments for the FY 2026–27 RAS workplan. Herbicide efficacy is outside the scope of this analysis.
+keywords:
+  - Lepidium latifolium
+  - perennial pepperweed
+  - Lower Owens River Project
+  - cumulative occupancy
+  - riparian invasion
+  - rapid assessment survey
+tbl-cap-location: top
 date: today
 date-modified: today
 citation:
   type: report
-  container-title: "Data Report"
+  container-title: "Technical Data Report"
   publisher: "Inyo County Water Department"
   issued: today
-  url: https://github.com/inyo-gov/noxious-weeds
+  url: https://inyo-gov.github.io/noxious-weeds
 google-scholar: true
+bibliography: references.bib
+csl: ecology.csl
 params:
   current_year: 2025
   start_year: 2018
 format: 
   html:
-    theme: cosmo
+    theme: litera
     toc: true
-    toc-depth: 4
+    toc-depth: 3
     toc-location: right
+    toc-title: "Contents"
     code-fold: true
     code-tools: true
     css: styles.css
@@ -59,17 +75,19 @@ format_abundance <- function(x) {
 }
 ```
 
-## Summary
+## Introduction
 
-This data report covers the monitoring of **Lepidium latifolium** (perennial pepperweed) in the Lower Owens River Project (LORP) area from `r params$start_year` to `r params$current_year`. The data is sourced from the [ArcGIS Online Noxious Weeds 2025 feature service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0) and provides updated spatial occurrence as of `r params$current_year`. 
+*Lepidium latifolium* L. (perennial pepperweed, tall whitetop) is a Eurasian mustard that invades wetlands, floodplains, irrigation infrastructure, and riparian corridors across the western United States [@young1995; @young1998; @calipc2024]. Dense stands displace desirable vegetation, alter soil chemistry, and are difficult to eradicate once established [@young1998; @cabi2024]. Propagules move as seed and root fragments; stands also expand vegetatively from creeping roots [@renz2012; @leininger2009].
 
-> "Perennial pepperweed (Lepidium latifolium), an introduced plant from southeastern Europe and Asia, is invasive throughout the western United States. It can establish in a wide range of environments and is a common problem in flood plains, irrigation structures, pastures, wetlands, riparian areas, roadsides, and residential site. Recent surveys identify perennial pepperweed as a weed problem in nearly all of California, and both the California Department of Food and Agriculture (CDFA) and California Invasive Plant Council (Cal-IPC) list it as a noxious weed of great ecological concern." - [UC IPM](https://ipm.ucanr.edu/home-and-landscape/perennial-pepperweed/#gsc.tab=0)
+Along river corridors, two processes generate new occupied patches at different scales. Local kernels—vegetative edge advance (~0.85 m yr⁻¹ under undisturbed conditions) and seed fall near mother plants—densify existing infestations [@renz2012]. Landscape-level jumps require long-distance transport by water (especially floods), animals, or machinery [@young1995; @leininger2009]. Widespread flooding can therefore produce pulse recruitment: a step increase in occupied corridor, followed by quieter intervals until the next major hydrologic pulse. Flood years may also limit survey access, so *known* occupancy often steps upward in subsequent accessible seasons.
 
-**California Invasive Plant Council (Cal-IPC) Rating: High**  
-High – These species have severe ecological impacts on physical processes, plant and animal communities, and vegetation structure. Their reproductive biology and other attributes are conducive to moderate to high rates of dispersal and establishment. Most are widely distributed ecologically.
+Rewatering and expanded wetland habitat under the Lower Owens River Project (LORP) were recognized early as factors that could increase pepperweed susceptibility by creating wetted surfaces and facilitating downstream transport [@ladwp2004]. Inyo County Water Department and partners conduct rapid assessment survey (RAS) monitoring of occurrences along the corridor. Until the multi-year series summarized here, corridor-scale rates of pepperweed discovery and known occupancy along the LORP remained largely unquantified in management reporting [@ladwp2024; @ladwp2026].
 
-**California Department of Food and Agriculture (CDFA) Rating: -***  
-* – included in the CCR Section 4500 list of California State Noxious Weeds.
+This technical report (1) documents spatial patterns of RAS detections for `r params$start_year`–`r params$current_year`, (2) estimates cumulative known occupancy at 0.1-mile and whole-mile resolutions, (3) presents operational forecasts of occupancy infill, and (4) identifies unoccupied corridor miles for FY 2026–27 RAS priorities ([approved workplan PDF](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf)). The estimand is the rate and geography of known-occupancy infill, not herbicide efficacy.
+
+> "Perennial pepperweed (*Lepidium latifolium*), an introduced plant from southeastern Europe and Asia, is invasive throughout the western United States… both the California Department of Food and Agriculture (CDFA) and California Invasive Plant Council (Cal-IPC) list it as a noxious weed of great ecological concern." — [UC IPM](https://ipm.ucanr.edu/home-and-landscape/perennial-pepperweed/#gsc.tab=0)
+
+Regulatory context. Cal-IPC rating: High. CDFA: listed under CCR Section 4500 (State Noxious Weeds).
 
 ```{r data-loading}
 #| message: false
@@ -115,12 +133,6 @@ if(nrow(pepper_current_year_for_bounds) > 0) {
   # Filter all data to LORP area (south of northernmost current year point)
   pepper_data <- pepper_data %>%
     filter(st_coordinates(.)[,2] <= northernmost_lat)
-  
-  cat("LORP Area Filter Applied:\n")
-  cat("- Northernmost", params$current_year, "point latitude:", round(northernmost_lat, 4), "°N\n")
-  cat("- Filtered dataset now contains", nrow(pepper_data), "observations\n")
-} else {
-  cat("No", params$current_year, "data found for LORP area filtering\n")
 }
 
 # Include all records (no year filtering)
@@ -154,26 +166,50 @@ summary_stats <- pepper_data %>%
   arrange(Year_Display)
 ```
 
-### Data Overview
+## Methods
 
-The dataset includes `r nrow(pepper_data)` total observations across `r length(unique(pepper_data$Year_Display[!is.na(pepper_data$Year_Display)]))` years, with peak survey activity in `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` (`r max(table(pepper_data$Year_Display, useNA='ifany'))` records).
+### Occurrence data
 
-### Key Findings Summary
+Point observations of perennial pepperweed were obtained from the [Inyo County ArcGIS Online Noxious Weeds feature service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0) and restricted to the LORP study extent (south of the northernmost `r params$current_year` detection). Display year uses the observation date when available and the feature creation date otherwise. Field abundance is recorded in classes 5, 15, 25, 100, 200, where 200 denotes ≥200 plants (dense stands may contain thousands of individuals).
 
-- **Total Observations**: `r nrow(pepper_data)` records across all years (2018-2025)
-- **Peak Survey Year**: `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` with `r max(table(pepper_data$Year_Display, useNA='ifany'))` observations
-- **Recent Activity**: `r nrow(pepper_recent)` observations in 2022-2025
-- **Historical Baseline**: `r nrow(pepper_historical)` observations in 2018-2021
-- **Data Coverage**: `r round((nrow(pepper_data) - sum(is.na(pepper_data$Year_Display))) / nrow(pepper_data) * 100, 1)`% of records have complete date information (using observation date with creation date fallback)
+2018 as a cumulative baseline. Records labeled 2018 are not a single-season snapshot: they accumulate detections from surveys in 2018 and earlier years that were consolidated into the modern feature service. Later calendar years (2019–`r params$current_year`) more closely reflect that season’s survey effort and new discoveries. Cumulative occupancy from 2018 onward therefore treats 2018 as the start-of-series known stock, not as an annual recruitment pulse.
 
-## Interactive Map Comparison
+Bank side. Pre-2018 field forms sometimes recorded east/west bank explicitly. That attribute is largely redundant for corridor analysis: bank can be derived from each point’s XY location relative to the river channel / mile centerline (as in the 2026 east/west gap lines). This report does not rely on a stored bank field.
 
-The following interactive map shows pepperweed populations across all years (`r params$start_year`-`r params$current_year`). Use the layer controls in the top-right corner to toggle between different years. The map includes all `r nrow(pepper_data)` documented observations, with feature creation dates used when observation dates are unavailable.
+### Corridor occupancy
 
-**Map layers:** purple **River channels** (multithreaded Owens River) and blue **High-water line** (June 2023 floodplain). Survey-gap polygons are deferred for now — use the tabular monitoring recommendations below.
+For occupancy and monitoring priorities, sites more than 250 m from the river-mile centerline are excluded so off-channel ditch or field points do not falsely occupy a corridor mile. Cumulative known occupancy is the share of (a) 0.1-mile segments and (b) whole river miles (RM 0–60) that have ever had a corridor detection by a given year. Once detected, a unit remains in the cumulative total—isolating discovery/infill from year-to-year variation in survey intensity and from resurvey avoidance of known stands.
+
+### Forecasts
+
+Linear, asymptotic, logistic, and recent-trajectory models are fit to the cumulative series as operational descriptions of known-occupancy infill (not stem-density invasion models). Step-pulse scenarios encode flood-then-plateau structure: a fast regime (~6-year discovery pulses after the recent 2017/2023 flood cluster) and a low-spread regime (12-year pulses with quieter between-pulse drift). Calendar milestones are rounded to whole years. A 0.1-mi cumulative heatmap along the corridor visualizes discovery geography without false gaps from resurvey avoidance.
+
+### Limitations
+
+- Records represent documented RAS observations only; absence of a point does not prove absence of plants.
+- The 2018 year class pools pre-2018 historical detections with 2018 surveys; year-to-year increments after 2018 are the appropriate scale for annual discovery rates.
+- Survey timing, access (including floods), and observer effort affect annual maps more than cumulative discovery.
+- Abundance classes are field estimates, not stem counts.
+- Forecasts describe *known* occupancy under continued survey and do not attribute residuals to herbicide treatment intensity.
+
+### Dataset overview
+
+The filtered dataset includes `r nrow(pepper_data)` observations across `r length(unique(pepper_data$Year_Display[!is.na(pepper_data$Year_Display)]))` years (`r params$start_year`–`r params$current_year`), with peak survey activity in `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` (`r max(table(pepper_data$Year_Display, useNA='ifany'))` records).
+
+| Metric | Value |
+| --- | ---: |
+| Total observations | `r nrow(pepper_data)` |
+| Peak survey year | `r names(sort(table(pepper_data$Year_Display, useNA='ifany'), decreasing=TRUE)[1])` (`r max(table(pepper_data$Year_Display, useNA='ifany'))` records) |
+| Recent period (2022–2025) | `r nrow(pepper_recent)` |
+| Earlier period (2018–2021) | `r nrow(pepper_historical)` |
+| Records with usable year | `r round((nrow(pepper_data) - sum(is.na(pepper_data$Year_Display))) / nrow(pepper_data) * 100, 1)`% |
+
+## Spatial occurrence
+
+Interactive map of pepperweed detections (`r params$start_year`–`r params$current_year`). Toggle years in the layer control. Creation dates substitute when observation dates are missing. The 2018 & earlier layer is the cumulative baseline (pre-2018 plus 2018), not a single field season. Reference layers: purple river channels; 2026 East gap lines (solid sky blue) and 2026 West gap lines (dashed orange) mark bank stretches ≥400 m without corridor detections—east/west assigned from point XY relative to the channel, not from a legacy bank attribute.
 
 ::: {.map-a11y-summary}
-**Accessible map summary:** Points are colored by survey year (`r params$start_year`–`r params$current_year`) along the LORP corridor. Toggle year layers and basemap with the map controls. The same occurrence data are available as downloadable GeoJSON/KML below and are summarized in the reach, occupancy, and river-mile tables later in this report. Screen-reader users can rely on those tables and the year legend title “Detected and reported per year” rather than the interactive map canvas.
+Accessible map summary: Points are colored by survey year (`r params$start_year`–`r params$current_year`). Parallel gap lines mark east (solid blue) and west (dashed orange) banks without detections for ≥400 m — the 2026 RAS walk targets. Equivalent data are in the downloadable gap-line files and the monitoring recommendation tables. Screen-reader users can rely on those tables rather than the interactive map canvas.
 :::
 
 <div class="download-section">
@@ -212,11 +248,11 @@ extent_info <- list(
 <div class="spatial-extent">
 <h4>Study Area Boundaries</h4>
 <ul>
-<li><strong>North</strong>: `r round(extent_info$north, 4)`°N</li>
-<li><strong>South</strong>: `r round(extent_info$south, 4)`°N</li>
-<li><strong>East</strong>: `r round(extent_info$east, 4)`°W</li>
-<li><strong>West</strong>: `r round(extent_info$west, 4)`°W</li>
-<li><strong>Center</strong>: `r round(extent_info$center_lat, 4)`°N, `r round(extent_info$center_lon, 4)`°W</li>
+<li>North: `r round(extent_info$north, 4)`°N</li>
+<li>South: `r round(extent_info$south, 4)`°N</li>
+<li>East: `r round(extent_info$east, 4)`°W</li>
+<li>West: `r round(extent_info$west, 4)`°W</li>
+<li>Center: `r round(extent_info$center_lat, 4)`°N, `r round(extent_info$center_lon, 4)`°W</li>
 </ul>
 </div>
 
@@ -253,16 +289,16 @@ reach_centroids <- river_reaches %>%
   st_centroid() %>%
   mutate(Reach_Label = gsub("LORP Reach ", "R", Name))
 
-# High-water floodplain + multithreaded river (reference layers)
-fp_geojson <- "exports/survey_nav_2026/lorp_highwater_floodplain.geojson"
+# Gap survey lines + multithreaded river (reference layers)
+gap_geojson <- "exports/survey_nav_2026/ras_2026_survey_nav.geojson"
 ch_geojson <- "exports/survey_nav_2026/owens_river_channels.geojson"
-if ((!file.exists(fp_geojson) || !file.exists(ch_geojson)) && file.exists("export_survey_nav.R")) {
+if ((!file.exists(gap_geojson) || !file.exists(ch_geojson)) && file.exists("export_survey_nav.R")) {
   system2("Rscript", "export_survey_nav.R", stdout = FALSE, stderr = FALSE)
 }
-floodplain <- NULL
+gap_lines <- NULL
 river_channels <- NULL
-if (file.exists(fp_geojson)) {
-  floodplain <- st_read(fp_geojson, quiet = TRUE) %>% st_transform(4326)
+if (file.exists(gap_geojson)) {
+  gap_lines <- st_read(gap_geojson, quiet = TRUE) %>% st_transform(4326)
 }
 if (file.exists(ch_geojson)) {
   river_channels <- st_read(ch_geojson, quiet = TRUE) %>% st_transform(4326)
@@ -273,20 +309,46 @@ combined_map <- leaflet(pepper_data) %>%
   addProviderTiles(providers$Esri.WorldImagery, group = "World Imagery") %>%
   addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap")
 
-# June 2023 high-water floodplain (full extent)
-if (!is.null(floodplain) && nrow(floodplain) > 0) {
-  combined_map <- combined_map %>%
-    addPolygons(
-      data = floodplain,
-      fillColor = "#64b5f6",
-      fillOpacity = 0.18,
-      color = "#0d47a1",
-      weight = 2,
-      opacity = 0.9,
-      popup = ~paste0("<b>June 2023 high-water line</b><br>", Acres, " acres"),
-      group = "High-water line",
-      options = pathOptions(clickable = TRUE)
-    )
+# 2026 east/west gap survey lines (parallel to mainstem)
+if (!is.null(gap_lines) && nrow(gap_lines) > 0) {
+  gap_east <- gap_lines %>% filter(Bank == "East")
+  gap_west <- gap_lines %>% filter(Bank == "West")
+  if (nrow(gap_east) > 0) {
+    combined_map <- combined_map %>%
+      addPolylines(
+        data = gap_east,
+        color = "#0077BB",
+        weight = 5,
+        opacity = 0.95,
+        dashArray = NULL,
+        popup = ~paste0(
+          "<b>East bank gap</b> (solid sky blue)<br>",
+          RM_Label, " · ", Length_mi, " mi<br>",
+          ifelse(is.na(Reach), "", paste0(Reach, "<br>")),
+          "No corridor detections on this bank ≥400 m"
+        ),
+        group = "2026 East gap lines",
+        options = pathOptions(lineCap = "round")
+      )
+  }
+  if (nrow(gap_west) > 0) {
+    combined_map <- combined_map %>%
+      addPolylines(
+        data = gap_west,
+        color = "#EE7733",
+        weight = 5,
+        opacity = 0.95,
+        dashArray = "10, 10",
+        popup = ~paste0(
+          "<b>West bank gap</b> (dashed orange)<br>",
+          RM_Label, " · ", Length_mi, " mi<br>",
+          ifelse(is.na(Reach), "", paste0(Reach, "<br>")),
+          "No corridor detections on this bank ≥400 m"
+        ),
+        group = "2026 West gap lines",
+        options = pathOptions(lineCap = "round")
+      )
+  }
 }
 
 # Multithreaded Owens River channels
@@ -303,7 +365,7 @@ if (!is.null(river_channels) && nrow(river_channels) > 0) {
 }
 
 combined_map <- combined_map %>%
-  # Add 2018 markers
+  # 2018 layer = cumulative baseline (pre-2018 + 2018)
   addCircleMarkers(
     data = pepper_2018,
     radius = 5,
@@ -312,7 +374,7 @@ combined_map <- combined_map %>%
     fillOpacity = 0.7,
     weight = 2,
       popup = ~paste0(
-        "<b>2018 Data</b><br>",
+        "<b>2018 &amp; earlier (baseline)</b><br>",
         "Date: ", format(Date_Display, "%Y-%m-%d"), "<br>",
         "Date Source: ", ifelse(is.na(Year_Observed), "Creation Date", "Observation Date"), "<br>",
         "Species: ", Species, "<br>",
@@ -321,7 +383,7 @@ combined_map <- combined_map %>%
         ifelse(exists("Name") && !is.na(Name), paste0("LORP Reach: ", Name, "<br>"), ""),
         "Notes: ", ifelse(is.na(Notes), "None", Notes)
       ),
-    group = "2018 Data"
+    group = "2018 & earlier"
   ) %>%
   # Add 2019 markers
   addCircleMarkers(
@@ -491,9 +553,9 @@ combined_map <- combined_map %>%
   )
 
 overlay_groups <- c(
-  if (!is.null(floodplain) && nrow(floodplain) > 0) "High-water line",
+  if (!is.null(gap_lines) && nrow(gap_lines) > 0) c("2026 East gap lines", "2026 West gap lines"),
   if (!is.null(river_channels) && nrow(river_channels) > 0) "River channels",
-  "2018 Data", "2019 Data", "2020 Data", "2021 Data", "2022 Data",
+  "2018 & earlier", "2019 Data", "2020 Data", "2021 Data", "2022 Data",
   "2023 Data", "2024 Data", "2025 Data", "Reach Labels",
   if (nrow(wq_stations) > 0) "Water Quality Stations"
 )
@@ -506,9 +568,9 @@ combined_map <- combined_map %>%
   ) %>%
   addLegend(
     position = "bottomleft",
-    colors = c("black", "darkred", "red", "yellow", "orange", "green", "blue", "purple", if(nrow(wq_stations) > 0) "blue"),
-    labels = c("2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", if(nrow(wq_stations) > 0) "WQ Stations"),
-    title = "Detected and reported per year"
+    colors = c("#0077BB", "#EE7733", "black", "darkred", "red", "yellow", "orange", "green", "blue", "purple", if(nrow(wq_stations) > 0) "blue"),
+    labels = c("2026 East gap (solid)", "2026 West gap (dashed)", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025", if(nrow(wq_stations) > 0) "WQ Stations"),
+    title = "Gap lines & detections by year"
   )
 
 combined_map <- combined_map %>%
@@ -525,15 +587,18 @@ combined_map <- combined_map %>%
 combined_map
 ```
 
-### `r params$current_year` Distribution - plants per site estimated from field observations
+## Abundance structure
 
-Field abundance is recorded in discrete estimate classes (**5, 15, 25, 100, 200**). A value of **200 means ≥200 plants** — a lower bound for dense stands that may contain hundreds to thousands of individuals (not an exact count of 200).
+Field-estimated plants per site in the most recent survey year, and recent low-abundance sites that may warrant early intervention.
+
+Field abundance is recorded in discrete estimate classes (5, 15, 25, 100, 200). A value of 200 means ≥200 plants — a lower bound for dense stands that may contain hundreds to thousands of individuals (not an exact count of 200).
 
 The following chart shows the distribution of these abundance classes for pepperweed sites documented in `r params$current_year`:
 
 ```{r abundance-histogram}
 #| message: false
 #| warning: false
+#| results: 'asis'
 #| fig-alt: "Bar chart of perennial pepperweed sites by field abundance class (5, 15, 25, 100, 200+) for the current survey year. Class 200+ means 200 or more plants and may represent thousands."
 
 # Filter for current year data only
@@ -590,26 +655,26 @@ if(nrow(pepper_current_year) > 0) {
   small_pops <- sum(pepper_current_year$Abundance < 200, na.rm = TRUE)
   large_pops <- sum(pepper_current_year$Abundance >= 200, na.rm = TRUE)
   
-  cat("###", params$current_year, "Site Distribution\n")
-  cat("- **Total Sites**:", nrow(pepper_current_year), "\n")
-  cat("- **Sites below 200 class**:", small_pops, "(", round(small_pops/nrow(pepper_current_year)*100, 1), "%)\n")
-  cat("- **Sites in 200+ class (≥200 plants; may be thousands)**:", large_pops, "(", round(large_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  cat("\n\n### ", params$current_year, " site distribution\n\n", sep = "")
+  cat("- Total Sites:", nrow(pepper_current_year), "\n")
+  cat("- Sites below 200 class:", small_pops, "(", round(small_pops/nrow(pepper_current_year)*100, 1), "%)\n")
+  cat("- Sites in 200+ class (≥200 plants; may be thousands):", large_pops, "(", round(large_pops/nrow(pepper_current_year)*100, 1), "%)\n")
   
   # Detailed bin counts
-  cat("\n### Detailed Abundance Distribution\n")
+  cat("\n\n### Detailed abundance distribution\n\n")
   for(i in 1:nrow(abundance_counts)) {
     bin_name <- as.character(abundance_counts$Abundance_Bin[i])
     bin_count <- abundance_counts$n[i]
     label <- if (bin_name == "200+") "200+ plants (≥200; may be thousands)" else paste0(bin_name, " plants (estimate class)")
-    cat("- **", label, "**: ", bin_count, " sites\n", sep = "")
+    cat("- ", label, ": ", bin_count, " sites\n", sep = "")
   }
   
   # Range information
-  cat("\n### Abundance coding\n")
-  cat("- Field classes used: **5, 15, 25, 100, 200**\n")
-  cat("- **200 = 200 or more** — dense patches are not counted stem-by-stem and can represent thousands of individuals\n")
+  cat("\n\n### Abundance coding\n\n")
+  cat("- Field classes used: 5, 15, 25, 100, 200\n")
+  cat("- 200 = 200 or more — dense patches are not counted stem-by-stem and can represent thousands of individuals\n\n")
 } else {
-  cat("No", params$current_year, "data available for abundance analysis.\n")
+  cat("\n\nNo ", params$current_year, " data available for abundance analysis.\n\n", sep = "")
 }
 ```
 
@@ -641,25 +706,12 @@ if(nrow(recent_sites) > 0) {
 
 
 
-## Data Quality and Limitations
-
-### Data Sources
-- **Primary Source**: [ArcGIS Online Noxious Weeds 2025 Feature Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
-
-- **Last Updated**: `r format(as.POSIXct(max(pepper_data$CreationDate, na.rm = TRUE)/1000, origin='1970-01-01'), "%B %d, %Y")`
-- **Coordinate System**: WGS84 (EPSG:4326)
-
-### Limitations
-- Data represents documented observations only
-- Population estimates may vary based on survey timing and conditions
-- Some areas may be under-sampled due to access constraints
-- Abundance is recorded in field estimate classes (**5, 15, 25, 100, 200**); **200 means ≥200 plants** and dense stands may contain thousands of individuals
-
-## River Reach Analysis
+## Reach-scale patterns
 
 ```{r river-reach-analysis}
 #| message: false
 #| warning: false
+#| results: 'asis'
 #| fig-width: 16
 #| fig-height: 15
 #| fig-alt: "Faceted bar charts showing pepperweed site counts by year for each LORP reach (Reaches 1 through 6)."
@@ -676,19 +728,10 @@ river_reaches <- river_reaches %>%
 # Ensure both datasets have the same CRS (WGS84)
 river_reaches <- st_transform(river_reaches, st_crs(pepper_data))
 
-# Check if we have reach data
-cat("Number of river reaches loaded:", nrow(river_reaches), "\n")
-cat("Reach names:", unique(river_reaches$Name), "\n")
-
 # Perform spatial join to determine which reach each pepperweed site is closest to
 # Use nearest neighbor join since sites might not fall exactly within reach polygons
 pepper_data_with_reaches <- pepper_data %>%
   st_join(river_reaches, join = st_nearest_feature)
-
-# Check how many sites were matched
-cat("Sites before filtering:", nrow(pepper_data), "\n")
-cat("Sites after spatial join:", nrow(pepper_data_with_reaches), "\n")
-cat("Sites with reach assignments:", sum(!is.na(pepper_data_with_reaches$Name)), "\n")
 
 # Filter to only sites within reaches
 pepper_data_with_reaches <- pepper_data_with_reaches %>%
@@ -741,10 +784,10 @@ if(nrow(reach_summary) > 0) {
   print(reach_plot)
   
   # Summary statistics
-  cat("### LORP Reach Distribution Summary\n")
-  cat("**Total Reaches Analyzed**:", length(unique(reach_summary$Name)), "\n")
-  cat("**Years Covered**:", min(reach_summary$Year_Display), "-", max(reach_summary$Year_Display), "\n")
-  cat("**Reaches with Data**:", length(unique(reach_summary$Name[reach_summary$Site_Count > 0])), "\n")
+  cat("\n\n### LORP reach distribution summary\n\n")
+  cat("- Total Reaches Analyzed:", length(unique(reach_summary$Name)), "\n")
+  cat("- Years Covered:", min(reach_summary$Year_Display), "-", max(reach_summary$Year_Display), "\n")
+  cat("- Reaches with Data:", length(unique(reach_summary$Name[reach_summary$Site_Count > 0])), "\n")
   
   # Most active reaches
   top_reaches <- reach_summary %>%
@@ -752,27 +795,28 @@ if(nrow(reach_summary) > 0) {
     summarise(Total_Sites = sum(Site_Count), .groups = 'drop') %>%
     arrange(desc(Total_Sites))
   
-  cat("\n### Reach Activity Summary\n")
+  cat("\n\n### Reach activity summary\n\n")
   for(i in 1:nrow(top_reaches)) {
-    cat("- **", top_reaches$Name[i], "**:", top_reaches$Total_Sites[i], "sites\n")
+    cat("- ", top_reaches$Name[i], ": ", top_reaches$Total_Sites[i], " sites\n", sep = "")
   }
   
   # Sites not in any reach
   sites_outside_reaches <- nrow(pepper_data) - nrow(pepper_data_with_reaches)
   if(sites_outside_reaches > 0) {
-    cat("\n### Sites Outside LORP Reaches\n")
-    cat("- **Sites outside reach polygons**:", sites_outside_reaches, "\n")
-    cat("- **Percentage of total sites**:", round(sites_outside_reaches/nrow(pepper_data)*100, 1), "%\n")
+    cat("\n\n### Sites outside LORP reaches\n\n")
+    cat("- Sites outside reach polygons:", sites_outside_reaches, "\n")
+    cat("- Percentage of total sites:", round(sites_outside_reaches/nrow(pepper_data)*100, 1), "%\n\n")
   }
 } else {
-  cat("No reach data available for analysis.\n")
+  cat("\n\nNo reach data available for analysis.\n\n")
 }
 ```
 
-## Occupancy Analysis
+## Corridor occupancy and discovery forecasts
 ```{r occupancy-analysis}
 #| message: false
 #| warning: false
+#| results: 'asis'
 
 # Load river miles data if not already loaded
 if(!exists("rivermiles")) {
@@ -849,18 +893,18 @@ reach_occupancy <- pepper_data_with_segments %>%
   arrange(Year_Display, Name)
 
 # Display results
-cat("### Overall Occupancy Analysis\n")
-cat("**Resolution**: 1/10 mile segments (600 total segments across 60 miles)\n\n")
+cat("\n\n### Overall occupancy analysis\n\n")
+cat("Resolution: 1/10 mile segments (600 total segments across 60 miles)\n\n")
 
 # Overall occupancy table
-cat("#### Overall Occupancy by Year\n")
+cat("#### Overall occupancy by year\n\n")
 print(kable(overall_occupancy, 
             col.names = c("Year", "Segments Occupied", "Total Segments", "Occupancy %"),
             align = c("c", "c", "c", "c"),
             caption = "Number of 1/10 mile segments occupied by pepperweed"))
 
 # Reach occupancy table
-cat("\n#### Reach-Specific Occupancy\n")
+cat("\n\n#### Reach-specific occupancy\n\n")
 reach_occupancy_wide <- reach_occupancy %>%
   select(Year_Display, Name, Occupancy_Percent) %>%
   pivot_wider(names_from = Year_Display, values_from = Occupancy_Percent, names_prefix = "Year_") %>%
@@ -872,11 +916,11 @@ print(kable(reach_occupancy_wide,
             caption = "Percentage of each reach occupied by pepperweed (by year)"))
 
 # Summary statistics
-cat("\n### Occupancy Summary Statistics\n")
-cat("**Average Annual Occupancy**:", round(mean(overall_occupancy$Occupancy_Percent), 1), "%\n")
-cat("**Highest Occupancy Year**:", overall_occupancy$Year_Display[which.max(overall_occupancy$Occupancy_Percent)], 
+cat("\n\n### Occupancy summary statistics\n\n")
+cat("- Average Annual Occupancy:", round(mean(overall_occupancy$Occupancy_Percent), 1), "%\n")
+cat("- Highest Occupancy Year:", overall_occupancy$Year_Display[which.max(overall_occupancy$Occupancy_Percent)],
     "(", max(overall_occupancy$Occupancy_Percent), "%)\n")
-cat("**Lowest Occupancy Year**:", overall_occupancy$Year_Display[which.min(overall_occupancy$Occupancy_Percent)], 
+cat("- Lowest Occupancy Year:", overall_occupancy$Year_Display[which.min(overall_occupancy$Occupancy_Percent)],
     "(", min(overall_occupancy$Occupancy_Percent), "%)\n")
 
 # Most/least occupied reaches
@@ -889,13 +933,13 @@ reach_summary <- reach_occupancy %>%
   ) %>%
   arrange(desc(Avg_Occupancy))
 
-cat("\n**Most Occupied Reach**:", reach_summary$Name[1], "(", reach_summary$Avg_Occupancy[1], "% average)\n")
-cat("**Least Occupied Reach**:", reach_summary$Name[nrow(reach_summary)], "(", reach_summary$Avg_Occupancy[nrow(reach_summary)], "% average)\n")
+cat("\n\n- Most Occupied Reach:", reach_summary$Name[1], "(", reach_summary$Avg_Occupancy[1], "% average)\n")
+cat("- Least Occupied Reach:", reach_summary$Name[nrow(reach_summary)], "(", reach_summary$Avg_Occupancy[nrow(reach_summary)], "% average)\n\n")
 ```
 
-### Cumulative Discovery and Occupancy Forecasts
+### Cumulative discovery and occupancy forecasts
 
-Annual occupancy fluctuates with survey effort. A more informative metric for the “more you look, the more you find” pattern is **cumulative discovery**: the share of corridor segments that have ever had a detection. Pepperweed is already widespread on adjacent conveyances and upper-river reaches, so the planning question is when known occupancy along the LORP corridor approaches saturation.
+Annual point maps fluctuate with survey effort and with avoidance of known dense or treated stands. A more informative estimand is cumulative discovery: the share of corridor units that have ever had a detection. Pepperweed is already widespread on adjacent conveyances and upper-river reaches; the planning question is how quickly *known* occupancy along the LORP corridor approaches saturation under continued RAS and waterway-mediated spread.
 
 #### Cumulative Discovery by Year
 
@@ -1069,7 +1113,7 @@ milestone_row <- function(fit_lin, fit_asy, fit_log, resolution) {
   data.frame(
     Resolution = resolution,
     Metric = c("50%", "75%", "90%", "95%", "99%", "100% (linear only)"),
-    Linear = round(c(year_lin(50), year_lin(75), year_lin(90), year_lin(95), year_lin(99), fit_lin$year_100), 1),
+    Linear = round(c(year_lin(50), year_lin(75), year_lin(90), year_lin(95), year_lin(99), fit_lin$year_100), 0),
     Asymptotic = round(c(
       fit_asy$t0 - log(1 - 50/100) / fit_asy$r,
       fit_asy$t0 - log(1 - 75/100) / fit_asy$r,
@@ -1077,7 +1121,7 @@ milestone_row <- function(fit_lin, fit_asy, fit_log, resolution) {
       fit_asy$year_95,
       fit_asy$year_99,
       NA_real_
-    ), 1),
+    ), 0),
     Logistic = round(c(
       fit_log$year_50,
       fit_log$t_mid - log(100/75 - 1) / fit_log$r,
@@ -1085,7 +1129,7 @@ milestone_row <- function(fit_lin, fit_asy, fit_log, resolution) {
       fit_log$year_95,
       fit_log$year_99,
       NA_real_
-    ), 1)
+    ), 0)
   )
 }
 
@@ -1105,8 +1149,8 @@ year_at_logistic <- function(fit, target, K = 100) {
 infill_levels <- c(50, 75, 90)
 infill_gaps <- data.frame(
   Occupancy = paste0(infill_levels, "%"),
-  Year_WholeMile = round(vapply(infill_levels, function(p) year_at_logistic(mile_log, p), numeric(1)), 1),
-  Year_Segment = round(vapply(infill_levels, function(p) year_at_logistic(seg_log, p), numeric(1)), 1)
+  Year_WholeMile = round(vapply(infill_levels, function(p) year_at_logistic(mile_log, p), numeric(1)), 0),
+  Year_Segment = round(vapply(infill_levels, function(p) year_at_logistic(seg_log, p), numeric(1)), 0)
 ) %>%
   mutate(
     Lag_Years = round(Year_Segment - Year_WholeMile, 1),
@@ -1116,17 +1160,17 @@ infill_gaps <- data.frame(
 # Model fit summary text (emitted after tables)
 fit_summary_md <- paste0(
   "\n##### Model Fit Summary\n\n",
-  sprintf("- **Segment linear**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+  sprintf("- Segment linear: +%.1f percentage points/year → 100%% in ~%.0f\n",
           seg_lin$b, seg_lin$year_100),
-  sprintf("- **Mile linear (full series)**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+  sprintf("- Mile linear (full series): +%.1f percentage points/year → 100%% in ~%.0f\n",
           mile_lin$b, mile_lin$year_100),
-  sprintf("- **Mile recent trajectory (last 2 yr)**: +%.1f percentage points/year → 100%% in ~%.0f\n",
+  sprintf("- Mile recent trajectory (last 2 yr): +%.1f percentage points/year → 100%% in ~%.0f\n",
           mile_recent_rate, mile_recent_year_100),
-  sprintf("- **Segment logistic**: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
+  sprintf("- Segment logistic: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
           seg_log$year_50, seg_log$year_95),
-  sprintf("- **Mile logistic**: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
+  sprintf("- Mile logistic: midpoint (50%%) ~%.0f; 95%% ~%.0f\n",
           mile_log$year_50, mile_log$year_95),
-  sprintf("\n**Current cumulative occupancy (%.0f)**: %.1f%% of 0.1-mi segments; %.1f%% of whole river miles.\n",
+  sprintf("\nCurrent cumulative occupancy (%.0f): %.1f%% of 0.1-mi segments; %.1f%% of whole river miles.\n",
           last_obs,
           cum_occupancy$Seg_Pct[cum_occupancy$Year == last_obs],
           cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs])
@@ -1137,10 +1181,10 @@ fit_summary_md <- paste0(
 
 Models fit to cumulative occupancy and projected forward:
 
-- **Linear** — constant annual discovery rate; reaches 100% in finite time.
-- **Asymptotic** — approaches 100% with diminishing returns (classic discovery / sampling plateau).
-- **Logistic** — S-curve to a 100% carrying capacity; slows as unoccupied corridor shrinks.
-- **Recent trajectory (whole miles)** — slope from the last two survey years only; tests the hypothesis that pepperweed is already more ubiquitous than the full-series fit implies, and limited annual effort is still revealing occupied miles quickly.
+- Linear — constant annual discovery rate; reaches 100% in finite time.
+- Asymptotic — approaches 100% with diminishing returns (classic discovery / sampling plateau).
+- Logistic — S-curve to a 100% carrying capacity; slows as unoccupied corridor shrinks.
+- Recent trajectory (whole miles) — slope from the last two survey years only; tests the hypothesis that pepperweed is already more ubiquitous than the full-series fit implies, and limited annual effort is still revealing occupied miles quickly.
 
 Pepperweed is already common on nearby ditches, streams, and upper-river reaches; these forecasts treat the LORP corridor as filling toward full known occupancy under continued survey and/or spread.
 
@@ -1157,7 +1201,7 @@ print(kable(milestones,
 
 ##### Infill lag (whole mile → 0.1-mi segment)
 
-The **horizontal gap** between the blue (whole-mile) and red (0.1-mi) logistic curves is the years of additional discovery needed to occupy every subsegment once whole-mile occupancy has already reached that level.
+The horizontal gap between the blue (whole-mile) and red (0.1-mi) logistic curves is the years of additional discovery needed to occupy every subsegment once whole-mile occupancy has already reached that level.
 
 ```{r occupancy-forecast-infill}
 #| message: false
@@ -1293,20 +1337,195 @@ print(forecast_plot)
 
 #### Interpretation
 
-`r paste0("- **Whole-mile occupancy** is already high (~", cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs], "% known), consistent with pepperweed being fairly ubiquitous along the corridor at coarse scale.")`
+`r paste0("- Whole-mile occupancy is already high (~", cum_occupancy$Mile_Pct[cum_occupancy$Year == last_obs], "% known), consistent with coarse-scale presence along much of the corridor.")`
 
-`r paste0("- **0.1-mile occupancy** remains lower (~", cum_occupancy$Seg_Pct[cum_occupancy$Year == last_obs], "%). The annotated horizontal gaps are the expected years of additional surveying/spread before every subsegment is known occupied at that same occupancy level.")`
+`r paste0("- 0.1-mile occupancy remains lower (~", cum_occupancy$Seg_Pct[cum_occupancy$Year == last_obs], "%). Annotated horizontal gaps estimate years of additional surveying or local fill before every subsegment is known occupied at the same occupancy level.")`
 
-`r sprintf("- **Recent-trajectory scenario**: using only %.0f–%.0f whole-mile discovery (+%.1f pp/yr), cumulative mile occupancy reaches 100%% around **%.0f**. This is the “already ubiquitous / under-surveyed” case — if the last two years’ pace continues, known whole-mile occupancy saturates almost immediately relative to the full-series logistic.", min(recent_miles$Year), max(recent_miles$Year), mile_recent_rate, mile_recent_year_100)`
+`r sprintf("- Recent-trajectory scenario: using only %.0f–%.0f whole-mile discovery (+%.1f pp/yr), cumulative mile occupancy reaches 100%% around %.0f. This upper-bound case assumes the last two years’ discovery pace continues.", min(recent_miles$Year), max(recent_miles$Year), mile_recent_rate, mile_recent_year_100)`
 
-- Full-series linear/logistic forecasts are slower and more consistent with a sampling plateau; the recent trajectory is an upper-bound discovery scenario, not a separate biological invasion model.
-- Increased RAS effort in currently empty miles (see Monitoring Recommendations) will accelerate cumulative discovery even without new colonization.
+- Full-series linear and logistic forecasts are slower and more consistent with a sampling or pulse–plateau process; the recent trajectory is not a separate biological invasion model.
+- Flood years with limited access (e.g., 2023) can depress annual detections while cumulative occupancy remains unchanged; subsequent accessible seasons may show discovery pulses.
+- Increased RAS effort in currently empty miles (see Monitoring applications) accelerates cumulative discovery even without new colonization.
+- These forecasts intentionally do not attribute residuals to herbicide intensity [@young1998; @renz2006; @ucipm2024].
 
-## River Mile Analysis
+#### Step-pulse scenarios (fast vs low spread)
+
+Smooth curves average across hydrologic structure. Flood years 2017 and 2023 limited RAS access; large *discovery* steps followed in 2019 and 2025. The fast step-pulse scenario assumes that ~6-year flood/discovery rhythm continues, with between-pulse drift equal to the mean of all non-pulse years. The low-spread scenario relaxes pulse frequency to 12 years and uses quieter between-pulse drift (years with ≤3 new whole miles)—in case 2017–2023 was an unusually wet cluster.
+
+```{r step-pulse-forecast}
+#| message: false
+#| warning: false
+#| results: 'asis'
+#| fig-width: 11
+#| fig-height: 7.5
+#| fig-alt: "Step-pulse forecasts of cumulative pepperweed occupancy for whole river miles and 0.1-mile segments under fast 6-year and low-spread 12-year scenarios, compared with linear reference and observed 2018–2025 points. Flood years 2017 and 2023 marked."
+
+obs <- cum_occupancy %>%
+  arrange(Year) %>%
+  transmute(
+    Year,
+    Seg_Pct,
+    Mile_Pct,
+    New_Miles,
+    New_Seg = New_Segments
+  )
+
+discovery_pulse <- c(2019, 2025)
+flood_years <- c(2017, 2023)
+mile_d <- diff(obs$Mile_Pct)
+seg_d <- diff(obs$Seg_Pct)
+years_end <- obs$Year[-1]
+new_miles_end <- obs$New_Miles[-1]
+
+mile_pulse_jump <- mean(mile_d[years_end %in% discovery_pulse])
+seg_pulse_jump <- mean(seg_d[years_end %in% discovery_pulse])
+
+fast_period <- 6L
+mile_plateau_fast <- mean(mile_d[!(years_end %in% discovery_pulse)])
+seg_plateau_fast <- mean(seg_d[!(years_end %in% discovery_pulse)])
+
+low_period <- 12L
+quiet <- !(years_end %in% discovery_pulse) & (new_miles_end <= 3)
+mile_plateau_low <- mean(mile_d[quiet])
+seg_plateau_low <- mean(seg_d[quiet])
+
+step_project <- function(y0, p0, plateau, pulse_jump, last_pulse_year, period) {
+  out <- numeric(length(y0))
+  out[1] <- p0
+  for (i in 2:length(y0)) {
+    y <- y0[i]
+    is_pulse <- ((y - last_pulse_year) %% period == 0) && (y > last_pulse_year)
+    out[i] <- min(100, out[i - 1] + if (is_pulse) pulse_jump else plateau)
+  }
+  out
+}
+
+last_obs_yr <- max(obs$Year)
+p0_mile <- obs$Mile_Pct[obs$Year == last_obs_yr]
+p0_seg <- obs$Seg_Pct[obs$Year == last_obs_yr]
+proj_years <- last_obs_yr:min(last_obs_yr + 20, 2045)
+
+mile_fast <- step_project(proj_years, p0_mile, mile_plateau_fast, mile_pulse_jump, last_obs_yr, fast_period)
+mile_low <- step_project(proj_years, p0_mile, mile_plateau_low, mile_pulse_jump, last_obs_yr, low_period)
+seg_fast <- step_project(proj_years, p0_seg, seg_plateau_fast, seg_pulse_jump, last_obs_yr, fast_period)
+seg_low <- step_project(proj_years, p0_seg, seg_plateau_low, seg_pulse_jump, last_obs_yr, low_period)
+mile_lin_ref <- pmin(100, p0_mile + mile_lin$b * (proj_years - last_obs_yr))
+
+pred_2026_fast_m <- min(100, p0_mile + mile_plateau_fast)
+pred_2026_low_m <- min(100, p0_mile + mile_plateau_low)
+pred_2026_fast_s <- min(100, p0_seg + seg_plateau_fast)
+pred_2026_low_s <- min(100, p0_seg + seg_plateau_low)
+
+fc <- bind_rows(
+  data.frame(Year = proj_years, Pct = mile_fast, Series = "Miles — fast step-pulse (6 yr)", Kind = "step"),
+  data.frame(Year = proj_years, Pct = mile_low, Series = "Miles — low step-pulse (12 yr)", Kind = "step"),
+  data.frame(Year = proj_years, Pct = seg_fast, Series = "0.1-mi — fast step-pulse (6 yr)", Kind = "step"),
+  data.frame(Year = proj_years, Pct = seg_low, Series = "0.1-mi — low step-pulse (12 yr)", Kind = "step"),
+  data.frame(Year = proj_years, Pct = mile_lin_ref, Series = "Miles — linear (reference)", Kind = "linear")
+)
+
+obs_long <- bind_rows(
+  data.frame(Year = obs$Year, Pct = obs$Mile_Pct, Series = "Whole miles (observed)"),
+  data.frame(Year = obs$Year, Pct = obs$Seg_Pct, Series = "0.1-mi segments (observed)")
+)
+
+marks <- bind_rows(
+  data.frame(Year = flood_years, Lty = "flood"),
+  data.frame(Year = discovery_pulse, Lty = "discovery"),
+  data.frame(Year = last_obs_yr + fast_period * 1:3, Lty = "fast"),
+  data.frame(Year = last_obs_yr + low_period, Lty = "low")
+)
+
+step_pulse_plot <- ggplot() +
+  geom_vline(
+    data = marks %>% filter(Lty == "flood"),
+    aes(xintercept = Year), linetype = "longdash", color = "#2874a6", alpha = 0.7
+  ) +
+  geom_vline(
+    data = marks %>% filter(Lty == "discovery"),
+    aes(xintercept = Year), linetype = "dotted", color = "grey40"
+  ) +
+  geom_vline(
+    data = marks %>% filter(Lty == "fast"),
+    aes(xintercept = Year), linetype = "dotted", color = "#6c3483", alpha = 0.45
+  ) +
+  geom_vline(
+    data = marks %>% filter(Lty == "low"),
+    aes(xintercept = Year), linetype = "dotdash", color = "#1e8449", alpha = 0.55
+  ) +
+  geom_line(
+    data = fc %>% filter(Kind == "linear"),
+    aes(Year, Pct, color = Series), linewidth = 0.85, linetype = "dashed"
+  ) +
+  geom_step(
+    data = fc %>% filter(Kind == "step"),
+    aes(Year, Pct, color = Series), linewidth = 1.05, direction = "hv"
+  ) +
+  geom_point(data = obs_long, aes(Year, Pct, color = Series), size = 2.6) +
+  geom_line(data = obs_long, aes(Year, Pct, color = Series), linewidth = 1.0) +
+  annotate("text", x = 2017.15, y = 98, label = "Flood\n2017", hjust = 0, size = 3.0,
+           color = "#2874a6", lineheight = 0.9) +
+  annotate("text", x = 2023.15, y = 98, label = "Flood\n2023", hjust = 0, size = 3.0,
+           color = "#2874a6", lineheight = 0.9) +
+  scale_y_continuous(
+    limits = c(0, 105), breaks = seq(0, 100, 25),
+    labels = function(x) paste0(x, "%")
+  ) +
+  scale_x_continuous(breaks = seq(2016, max(proj_years), 4)) +
+  scale_color_manual(values = c(
+    "0.1-mi segments (observed)" = "#c0392b",
+    "Whole miles (observed)" = "#1a5276",
+    "Miles — linear (reference)" = "#85929e",
+    "Miles — fast step-pulse (6 yr)" = "#6c3483",
+    "Miles — low step-pulse (12 yr)" = "#1e8449",
+    "0.1-mi — fast step-pulse (6 yr)" = "#922b21",
+    "0.1-mi — low step-pulse (12 yr)" = "#196f3d"
+  )) +
+  labs(
+    title = "Step-pulse occupancy scenarios — fast vs low spread",
+    subtitle = paste0(
+      "Fast: 6-yr pulses + mean non-pulse drift; Low: 12-yr pulses + quiet-year drift. ",
+      sprintf("2026 plateau preds — miles %.1f%% (fast) / %.1f%% (low); segments %.1f%% / %.1f%%.",
+              pred_2026_fast_m, pred_2026_low_m, pred_2026_fast_s, pred_2026_low_s)
+    ),
+    x = "Year",
+    y = "Cumulative occupancy",
+    color = NULL,
+    caption = "Blue long-dash = flood years (limited RAS access). Dotted = discovery pulses and projected fast pulses."
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "bottom",
+    legend.direction = "vertical",
+    panel.grid.minor = element_blank(),
+    plot.title = element_text(face = "bold"),
+    plot.caption = element_text(size = 9, hjust = 0, color = "grey30")
+  ) +
+  guides(color = guide_legend(ncol = 2))
+
+print(step_pulse_plot)
+
+cat("\n\n### Calibrated rates\n\n")
+cat(sprintf(
+  "- Fast plateau drift: +%.2f pp/yr (miles), +%.2f pp/yr (0.1-mi); pulse jumps +%.2f / +%.2f pp; next discovery pulse ~%d.\n",
+  mile_plateau_fast, seg_plateau_fast, mile_pulse_jump, seg_pulse_jump, last_obs_yr + fast_period
+))
+cat(sprintf(
+  "- Low plateau drift: +%.2f pp/yr (miles), +%.2f pp/yr (0.1-mi); next discovery pulse ~%d.\n",
+  mile_plateau_low, seg_plateau_low, last_obs_yr + low_period
+))
+cat(sprintf(
+  "- Locked-style 2026 one-step (non-pulse year): miles %.1f%% (fast) vs %.1f%% (low); segments %.1f%% vs %.1f%%.\n\n",
+  pred_2026_fast_m, pred_2026_low_m, pred_2026_fast_s, pred_2026_low_s
+))
+```
+
+## River-mile patterns {#river-mile-analysis}
 
 ```{r river-mile-analysis}
 #| message: false
 #| warning: false
+#| results: 'asis'
 #| fig-width: 16
 #| fig-height: 12
 #| fig-alt: "Faceted bar charts of pepperweed site counts by whole river mile (0 to 60) for each survey year along the LORP corridor."
@@ -1367,48 +1586,16 @@ reach_boundaries <- pepper_data_with_reaches_and_miles %>%
   mutate(Name = paste0("LORP Reach ", Reach_Num))
 
 # Display the reach boundaries table
-cat("### Reach Boundaries (Northern Boundaries)\n")
-cat("**Table showing minimum river mile for each reach (northern boundary):**\n\n")
+cat("### Reach boundaries (northern)\n\n")
 print(kable(reach_boundaries, 
             col.names = c("LORP Reach", "Min River Mile", "Max River Mile", "Reach Number", "Label Position"),
             align = c("l", "c", "c", "c", "c"),
             caption = "Northern boundaries (minimum river miles) for each LORP reach"))
 
-# Use these actual boundaries for the plot
-cat("\n**Using actual reach boundaries from data:**\n")
-print(reach_boundaries)
-
 # Create a simple table showing labels and river miles
 reach_labels_table <- reach_boundaries %>%
   select(Name, Label_Position) %>%
   arrange(Label_Position)
-
-cat("\n### Reach Labels and River Miles\n")
-cat("**Table showing reach labels and their river mile positions:**\n\n")
-print(kable(reach_labels_table, 
-            col.names = c("Reach Label", "River Mile"),
-            align = c("l", "c"),
-            caption = "Reach labels and their river mile positions"))
-
-# Create a simple table from pepper_data grouped by reach
-pepper_data_with_miles <- pepper_data %>%
-  st_join(rivermiles, join = st_nearest_feature) %>%
-  st_join(river_reaches, join = st_nearest_feature) %>%
-  mutate(RiverMile = as.numeric(NAME)) %>%
-  filter(!is.na(Name))  # Only sites with reach assignments
-
-reach_min_miles <- pepper_data_with_miles %>%
-  st_drop_geometry() %>%
-  group_by(Name) %>%
-  summarise(Min_RiverMile = min(RiverMile, na.rm = TRUE), .groups = 'drop') %>%
-  arrange(Min_RiverMile)
-
-cat("\n### Reach Minimum River Miles\n")
-cat("**Table showing minimum river mile for each reach:**\n\n")
-print(kable(reach_min_miles, 
-            col.names = c("Reach", "Min River Mile"),
-            align = c("l", "c"),
-            caption = "Minimum river mile for each reach"))
 
 # Create faceted histogram
 if(nrow(river_mile_summary) > 0) {
@@ -1421,21 +1608,11 @@ if(nrow(river_mile_summary) > 0) {
     mutate(Site_Count_Capped = pmin(Site_Count, 20),
            RiverMile_Binned = factor(RiverMile_Binned, levels = sort(unique(RiverMile_Binned), decreasing = TRUE)))
   
-  # Manually set reach boundaries based on the table values
-  # LORP Reach 1: 0.1 -> bin 0
-  # LORP Reach 2: 3.7 -> bin 3 or 4  
-  # LORP Reach 3: 19.7 -> bin 19 or 20
-  # LORP Reach 4: 34.5 -> bin 34 or 35
-  # LORP Reach 5: 39.0 -> bin 39
-  # LORP Reach 6: 49.7 -> bin 49 or 50
-  
+  # Reach northern boundaries for plot overlays (whole-mile bins)
   reach_boundaries_plot <- data.frame(
     Name = c("Reach 1", "Reach 2", "Reach 3", "Reach 4", "Reach 5", "Reach 6"),
     Closest_Bin = c("0", "4", "20", "35", "39", "50")
   )
-  
-  cat("\n### Manual Reach Boundaries for Plot\n")
-  print(reach_boundaries_plot)
   
   river_plot <- ggplot(river_mile_summary_capped, aes(x = Site_Count_Capped, y = factor(RiverMile_Binned))) +
     geom_col(fill = "red", alpha = 0.8, width = 0.7) +
@@ -1471,10 +1648,10 @@ if(nrow(river_mile_summary) > 0) {
   print(river_plot)
   
   # Summary statistics
-  cat("### River Mile Distribution Summary\n")
-  cat("**Total River Miles Analyzed**:", length(unique(river_mile_summary$RiverMile_Binned)), "\n")
-  cat("**Years Covered**:", min(river_mile_summary$Year_Display), "-", max(river_mile_summary$Year_Display), "\n")
-  cat("**River Mile Range**:", min(river_mile_summary$RiverMile_Binned), "-", max(river_mile_summary$RiverMile_Binned), "\n")
+  cat("\n\n### River mile distribution summary\n\n")
+  cat("- Total River Miles Analyzed:", length(unique(river_mile_summary$RiverMile_Binned)), "\n")
+  cat("- Years Covered:", min(river_mile_summary$Year_Display), "-", max(river_mile_summary$Year_Display), "\n")
+  cat("- River Mile Range:", min(river_mile_summary$RiverMile_Binned), "-", max(river_mile_summary$RiverMile_Binned), "\n")
   
   # Most active river miles
   top_river_miles <- river_mile_summary %>%
@@ -1483,22 +1660,127 @@ if(nrow(river_mile_summary) > 0) {
     arrange(desc(Total_Sites)) %>%
     head(10)
   
-  cat("\n### Top 10 Most Active River Miles\n")
+  cat("\n\n### Top 10 most active river miles\n\n")
   for(i in 1:nrow(top_river_miles)) {
-    cat("- **River Mile", top_river_miles$RiverMile_Binned[i], "**:", top_river_miles$Total_Sites[i], "sites\n")
+    cat("- River Mile ", top_river_miles$RiverMile_Binned[i], ": ", top_river_miles$Total_Sites[i], " sites\n", sep = "")
   }
+  cat("\n")
 } else {
-  cat("No river mile data available for analysis.\n")
+  cat("\n\nNo river mile data available for analysis.\n\n")
 }
 ```
 
-## 2026 Monitoring Recommendations
+### Cumulative known occupancy at 0.1-mi resolution
 
-The [FY 2026–2027 LORP work plan](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf) directs summer RAS (rapid assessment survey) monitoring to focus on areas **without known pepperweed populations**. Study-design crosswalk: [`lorp-pia-completion` Doc 11](https://github.com/inyo-gov/lorp-pia-completion/blob/main/docs/11_fy2627_approved_workplan_reference.md). The tables below are derived from `r params$start_year`–`r params$current_year` occurrence data binned to whole river miles (see [River Mile Analysis](#river-mile-analysis)).
+Annual site maps can show “gaps” in later years where crews skip known dense or treated stands. The heatmap below is cumulative: once a 0.1-mi corridor segment is detected, it remains colored in subsequent years (fill = maximum annual site count observed through that year). White = never detected by that year. Only sites within 250 m of the river-mile centerline are included.
+
+```{r river-mile-01-heatmap}
+#| message: false
+#| warning: false
+#| fig-width: 9
+#| fig-height: 11
+#| fig-alt: "Heatmap of cumulative known pepperweed occupancy along the LORP corridor at 0.1-mile resolution by year from 2018 to 2025. White cells mean never detected; red intensity is cumulative maximum sites per segment. Blue lines mark LORP reach northern boundaries."
+
+if (!exists("rivermiles")) {
+  rivermiles <- st_read("data/LORP_RiverMiles_revised.shp", quiet = TRUE) %>%
+    mutate(RiverMile = as.numeric(NAME)) %>%
+    st_transform(st_crs(pepper_data))
+}
+if (!exists("pepper_data_with_rivermiles")) {
+  pepper_data_with_rivermiles <- pepper_data %>%
+    st_join(rivermiles %>% select(NAME), join = st_nearest_feature) %>%
+    rename(RiverMile = NAME)
+}
+
+rm_utm <- st_transform(rivermiles, 32611)
+pepper_utm <- st_transform(pepper_data_with_rivermiles, 32611)
+nn_idx <- st_nearest_feature(pepper_utm, rm_utm)
+corridor_dist_m <- as.numeric(st_distance(pepper_utm, rm_utm[nn_idx, ], by_element = TRUE))
+
+pepper_hm <- pepper_data_with_rivermiles %>%
+  mutate(dist_m = corridor_dist_m, RiverMile = as.numeric(RiverMile)) %>%
+  filter(dist_m <= 250, !is.na(RiverMile), RiverMile >= 0, RiverMile < 60) %>%
+  mutate(Mile_01 = floor(RiverMile / 0.1) * 0.1)
+
+years_hm <- seq(params$start_year, params$current_year)
+mile_grid <- seq(0, 59.9, by = 0.1)
+cap_used <- 10L
+
+summary_01 <- pepper_hm %>%
+  st_drop_geometry() %>%
+  group_by(Year_Display, Mile_01) %>%
+  summarise(Site_Count = n(), .groups = "drop") %>%
+  complete(Year_Display = years_hm, Mile_01 = mile_grid, fill = list(Site_Count = 0)) %>%
+  arrange(Mile_01, Year_Display) %>%
+  group_by(Mile_01) %>%
+  mutate(Cum_Max_Sites = cummax(Site_Count)) %>%
+  ungroup() %>%
+  mutate(Site_Fill = ifelse(Cum_Max_Sites == 0, NA_real_, pmin(Cum_Max_Sites, cap_used)))
+
+reach_bounds <- data.frame(
+  Label = c("Reach 1", "Reach 2", "Reach 3", "Reach 4", "Reach 5", "Reach 6"),
+  Mile = c(0, 4, 20, 35, 39, 50)
+)
+
+heatmap_01 <- ggplot(summary_01, aes(x = Year_Display, y = Mile_01, fill = Site_Fill)) +
+  geom_tile(width = 0.92, height = 0.1, color = NA) +
+  geom_hline(
+    data = reach_bounds, aes(yintercept = Mile),
+    color = "#1a5276", linewidth = 0.55, alpha = 0.95
+  ) +
+  geom_text(
+    data = reach_bounds,
+    aes(x = params$start_year - 0.45, y = Mile, label = Label),
+    inherit.aes = FALSE,
+    hjust = 0, vjust = -0.35, color = "#1a5276", size = 3.4, fontface = "bold"
+  ) +
+  scale_y_reverse(
+    breaks = seq(0, 60, by = 5),
+    expand = expansion(mult = c(0.005, 0.02))
+  ) +
+  scale_x_continuous(
+    breaks = years_hm,
+    expand = expansion(add = c(0.85, 0.35))
+  ) +
+  scale_fill_gradient(
+    name = "Cum. max sites\n/ 0.1-mi\n(capped)",
+    low = "#e74c3c",
+    high = "#4a0e0e",
+    limits = c(1, cap_used),
+    breaks = c(1, 5, 10),
+    na.value = "white"
+  ) +
+  labs(
+    title = "Cumulative known occupancy at 0.1-mi resolution",
+    subtitle = "Once detected, a segment stays colored (avoids false gaps from skipping known/treated stands)",
+    x = "Year",
+    y = "River mile",
+    caption = paste0(
+      "White = never detected by that year. Blue lines = LORP reach northern boundaries. ",
+      "Corridor filter: ≤250 m from centerline."
+    )
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    panel.background = element_rect(fill = "white", color = NA),
+    panel.grid.major.y = element_line(color = "grey90", linewidth = 0.3),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank(),
+    legend.position = "right",
+    plot.title = element_text(face = "bold"),
+    plot.caption = element_text(size = 9, hjust = 0, color = "grey30")
+  )
+
+print(heatmap_01)
+```
+
+## Monitoring applications (2026 RAS)
+
+The [FY 2026–2027 LORP work plan](https://inyowater.org/wp-content/uploads/2026/06/2026-2027-LORP-Work-Plan-and-Budget_draft_062226.pdf) directs summer RAS monitoring toward areas without known pepperweed populations, consistent with prioritizing satellite populations and leading edges [@renz2012]. Tables below use `r params$start_year`–`r params$current_year` corridor detections binned to whole river miles (see [River-mile patterns](#river-mile-analysis)).
 
 ### Priority Survey Areas
 
-River-mile segments with **no pepperweed detections on the river corridor** in any survey year (`r params$start_year`–`r params$current_year`). Only sites within 250 m of a river-mile marker count toward occupancy (off-channel ditch/field points are excluded so they do not falsely mark a mile as occupied). These align with the workplan objective to survey unoccupied corridor.
+River-mile segments with no pepperweed detections on the river corridor in any survey year (`r params$start_year`–`r params$current_year`). Only sites within 250 m of a river-mile marker count toward occupancy (off-channel ditch/field points are excluded so they do not falsely mark a mile as occupied). These align with the workplan objective to survey unoccupied corridor.
 
 ```{r monitoring-recommendations}
 #| message: false
@@ -1602,14 +1884,14 @@ if (nrow(survey_segments) > 0) {
 }
 ```
 
-`r if (exists("never_detected_miles") && length(never_detected_miles) > 0) paste0("**Summary:** ", length(never_detected_miles), " of ", length(mile_range), " river miles (", round(100 * length(never_detected_miles) / length(mile_range), 1), "%) have no recorded pepperweed on the corridor (within 250 m of a river-mile marker).")`
+`r if (exists("never_detected_miles") && length(never_detected_miles) > 0) paste0("Summary: ", length(never_detected_miles), " of ", length(mile_range), " river miles (", round(100 * length(never_detected_miles) / length(mile_range), 1), "%) have no recorded pepperweed on the corridor (within 250 m of a river-mile marker).")`
 
 ### East / West Bank Planning Notes
 
-Historical surveys do not record bank side in the feature service. For planning purposes, site coordinates were classified as **east** or **west** of the river centerline using the local channel direction at each river mile.
+Bank side for planning is taken from each site’s coordinates relative to the river centerline (local channel direction at each river mile), which matches how east/west can be derived from XY even when a legacy bank attribute exists on older forms. Sites are classified as east or west of the centerline for gap targeting.
 
-- **Unoccupied miles** (table above): survey **both banks** — absence of detections does not indicate which bank was visited.
-- **Partially occupied miles** (table below): where all detections fall on one bank, the opposite bank may warrant targeted survey even though populations are known nearby.
+- Unoccupied miles (table above): survey both banks — absence of detections does not indicate which bank was visited.
+- Partially occupied miles (table below): where all detections fall on one bank, the opposite bank may warrant targeted survey even though populations are known nearby.
 
 ```{r monitoring-one-bank}
 #| message: false
@@ -1694,28 +1976,30 @@ if (nrow(one_bank_gaps) > 0) {
 
 ### Suggested 2026 Survey Sequence
 
-1. **Reach 6 lower corridor (RM 43–48, 51–52, 54–60)** — largest unoccupied segments; highest workplan priority.
-2. **Reach 3 gap miles (RM 21–22, 24)** — short unoccupied segments within otherwise occupied reach; efficient to cover during Reach 3 transit.
-3. **Single-bank follow-up** — optional targeted passes on the undetected bank at miles listed above, if crew capacity allows.
+1. Reach 6 lower corridor (RM 43–48, 51–52, 54–60) — largest unoccupied segments; highest workplan priority.
+2. Reach 3 gap miles (RM 21–22, 24) — short unoccupied segments within otherwise occupied reach; efficient to cover during Reach 3 transit.
+3. Single-bank follow-up — optional targeted passes on the undetected bank at miles listed above, if crew capacity allows.
 
 ### Access and Route Planning (next step)
 
-The current navigation polygons follow the **mainstem river-mile centerline** (±100 m). That is enough to flag *where* to look, but not *how* crews actually move:
+RAS is on foot (no boats). In a dry year, crews will mostly follow dry banks, levees, roads, and known walking routes rather than secondary-channel networks.
 
-- **Secondary channels / side channels** often carry the walkable or boat-accessible path and may hold pepperweed even when the mapped mainstem mile looks empty.
-- **Prior RAS tracklogs** (Field Maps / Collector GPS tracks) show which banks and braids were reachable in past years — the practical route network for planning day sheets.
+Field Maps navigation (preferred for split crews): use the east/west gap lines exported below — parallel to the mainstem, drawn only where that bank has no corridor detections for ≥400 m (0.1-mi bins dissolved). Five+ people on different routes each open the same web map / offline area; they do not each need Tracker licenses (those are only for recording tracks).
 
-**Recommended workflow once those layers are available:**
+| Bank | Color | Pattern | Meaning |
+| --- | --- | --- | --- |
+| East | Sky blue `#0077BB` | Solid | Walk/survey the east side — no detections on that bank for this stretch |
+| West | Orange `#EE7733` | Dashed | Walk/survey the west side — no detections on that bank for this stretch |
 
-1. Overlay secondary-channel lines + historical tracklogs on the 2026 gap polygons.
-2. Clip or redraw survey units to follow accessible routes (not axis-aligned mainstem boxes).
-3. Tag each unit with `Access` (mainstem / secondary / tracklog-only) and preferred entry points.
-4. Re-export the Field Maps layer so staff navigate along known paths through negative space.
+Colors follow a colorblind-safe pair; pattern differs too so meaning is not color-only (ADA). If detections exist only on the west, the east line still draws for that stretch.
 
-*Drop GPX/GeoJSON tracklogs or an AGOL item URL into `data/` (or share the service link) and this export can be rebuilt on those routes.*
+Optional tracks (handheld GPS or phone GPX) still help refine entry points later; do not block planning on them. Use the river-mile tables plus these gap lines until then.
 
 ### Field Maps Navigation Layer
-**Area without RAS detections** = June 2023 [high-water](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_north/FeatureServer) floodplain ([south](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/highwaterline_south/FeatureServer) + north), split by river mile and bank, **minus** bank sides that already have pepperweed detections. The [multithreaded river](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/owens_river_feature/FeatureServer) is included as a reference layer.
+
+East/west gap lines = polylines parallel to the river-mile centerline (±50 m), one color/pattern per bank, only where that bank has no pepperweed detections in the 250 m corridor for a contiguous stretch of ≥400 m (built from 0.1-mi segments). If only the west bank has detections, the east line still appears for that reach. The [multithreaded river](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/owens_river_feature/FeatureServer) is included as a reference layer.
+
+*Draft for Field Maps — review against the river-mile tables before treating as final.*
 
 ```{r survey-nav-export}
 #| message: false
@@ -1729,9 +2013,8 @@ if (file.exists(export_script)) {
   for (f in c(
     "ras_2026_survey_nav.geojson",
     "ras_2026_survey_nav_shp.zip",
-    "lorp_highwater_floodplain.geojson",
     "owens_river_channels.geojson",
-    "ras_2026_banks_with_detections.geojson"
+    "lorp_rivermile_centerline.geojson"
   )) {
     src <- file.path("exports/survey_nav_2026", f)
     if (file.exists(src)) {
@@ -1745,37 +2028,37 @@ if (file.exists(nav_path)) {
   nav <- sf::st_read(nav_path, quiet = TRUE)
   nav_summary <- nav %>%
     sf::st_drop_geometry() %>%
-    count(Priority, Bank, name = "Units") %>%
-    arrange(match(Priority, c("High", "Medium", "Low")), Bank)
-  total_ac <- round(sum(nav$Acres, na.rm = TRUE), 1)
+    count(Bank, LineStyle, name = "Lines") %>%
+    arrange(Bank)
+  total_mi <- round(sum(nav$Length_mi, na.rm = TRUE), 1)
 
   cat("<div class=\"download-section\">\n")
-  cat("<h3>Download — area without RAS detections</h3>\n")
-  cat("<p>", nrow(nav), " units (~", total_ac, " acres): high-water floodplain on bank sides with <strong>zero</strong> pepperweed detections for that river mile.</p>\n", sep = "")
+  cat("<h3>Download — east/west gap survey lines</h3>\n")
+  cat("<p>", nrow(nav), " lines (~", total_mi, " mi): parallel to the mainstem on bank sides with no corridor pepperweed detections for ≥400 m. East = solid sky blue; West = dashed orange.</p>\n", sep = "")
   cat("<div class=\"download-links\">\n")
   cat("<a href=\"exports/ras_2026_survey_nav_shp.zip\">Shapefile (zip) — Field Maps</a>\n")
-  cat("<a href=\"exports/ras_2026_survey_nav.geojson\">No-detection units GeoJSON</a>\n")
-  cat("<a href=\"exports/lorp_highwater_floodplain.geojson\">High-water floodplain</a>\n")
+  cat("<a href=\"exports/ras_2026_survey_nav.geojson\">Gap lines GeoJSON</a>\n")
   cat("<a href=\"exports/owens_river_channels.geojson\">River channels</a>\n")
-  cat("<a href=\"exports/ras_2026_banks_with_detections.geojson\">Banks with detections</a>\n")
+  cat("<a href=\"exports/lorp_rivermile_centerline.geojson\">River-mile centerline</a>\n")
   cat("</div>\n")
+  if (nrow(nav_summary) > 0) {
+    print(kable(nav_summary,
+                col.names = c("Bank", "Line style", "Lines"),
+                caption = "Gap lines by bank"))
+  }
   cat("</div>\n\n")
-
-  print(kable(nav_summary,
-              col.names = c("Priority", "Bank", "Units"),
-              align = c("l", "l", "c"),
-              caption = "Area without RAS detections (high water − detected bank side)"))
 } else {
   cat("Navigation layer not found. Run `Rscript export_survey_nav.R`.\n")
 }
 ```
 
-## Field Documentation
+## Field documentation
 
 ```{r field-images}
 #| message: false
 #| warning: false
 #| results: 'asis'
+#| eval: false
 
 # Function to check if a feature has attachments
 check_feature_attachments <- function(objectid) {
@@ -1825,12 +2108,13 @@ display_attachment_image <- function(objectid, attachment_id, alt_text, width = 
 
 ### Field Documentation Images
 
-Pepperweed observations with field photos:
+Pepperweed observations with field photos are available from the AGOL feature service attachments. (Photo gallery chunk is currently skipped at render time to avoid slow attachment checks; set `eval: true` on `field-images` / `field-images-display` to refresh.)
 
 ```{r field-images-display}
 #| message: false
 #| warning: false
 #| results: 'asis'
+#| eval: false
 
 # Find features with attachments (check more features for up to 40 photos)
 features_to_check <- pepper_data %>%
@@ -1871,11 +2155,11 @@ if(length(features_with_attachments) > 0) {
       
       # Display metadata below the image
       cat("<div style='text-align: center; margin-bottom: 30px;'>")
-      cat("<p><strong>Feature ID:</strong>", objectid, "| <strong>Date:</strong>", format(feature$Date_Display, "%Y-%m-%d"), "| <strong>Abundance:</strong>", format_abundance(feature$Abundance), "</p>")
+      cat("<p>Feature ID:", objectid, "| Date:", format(feature$Date_Display, "%Y-%m-%d"), "| Abundance:", format_abundance(feature$Abundance), "</p>")
       
       # Include Notes if available
       if(!is.na(feature$Notes) && feature$Notes != "") {
-        cat("<p><strong>Notes:</strong>", feature$Notes, "</p>")
+        cat("<p>Notes:", feature$Notes, "</p>")
       }
       
       cat("</div>")
@@ -1892,19 +2176,12 @@ if(images_displayed == 0) {
 }
 ```
 
-## Conclusion
+## Conclusions
 
-The `r params$start_year`-`r params$current_year` data reveals expanding pepperweed distribution within the LORP area. The interactive mapping tool provides land managers with a visualization tool for identifying and prioritizing treatment areas over time.
+Occurrence records for `r params$start_year`–`r params$current_year` document progressive filling of known pepperweed occupancy along the LORP corridor, with coarse (whole-mile) occupancy substantially ahead of fine (0.1-mi) occupancy. Cumulative discovery isolates this infill process from year-to-year survey intensity and from resurvey avoidance of known stands. Smooth forecasts provide planning benchmarks for when known occupancy may approach saturation; a pulse-recruitment reading—flood-driven steps, quieter intervals, and lagged discovery after high-water years—remains a process-motivated alternative to purely linear discovery.
 
-This report will be updated as new data are added to the live feature service. The data source is available at: [ArcGIS REST Service](https://services.arcgis.com/0jRlQ17Qmni5zEMr/arcgis/rest/services/Noxious_Weeds_2025_view/FeatureServer/0)
+Operationally, FY 2026–27 RAS priorities target corridor miles and bank stretches still lacking detections, consistent with managing leading edges and satellite populations [@renz2012]. This report will update as new observations enter the live feature service. A companion manuscript track will lock and later evaluate formal one-year-ahead occupancy forecasts.
 
-### Data Disclaimer
+### Data disclaimer
 
-The data presented in this report are collected for monitoring and management purposes by the Inyo County Water Department. While every effort is made to ensure accuracy, field conditions, survey timing, and observer experience may affect data quality. Users should verify critical information independently before making management decisions.
-
----
-
-**Inyo County Water Department**  
-© 2025 Inyo County, California. All rights reserved.
-
-*This analysis is automatically updated when new data is added to the ArcGIS feature service.*
+Data are collected for monitoring and management by the Inyo County Water Department. Field conditions, survey timing, and observer experience affect quality. Users should verify critical information independently before management decisions.

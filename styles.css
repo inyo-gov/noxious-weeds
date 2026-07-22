@@ -1,29 +1,97 @@
-/* Perennial Pepperweed — clean Quarto site (cosmo + right TOC)
-   Link/button blue darkened for WCAG AA contrast (≥4.5:1 on white). */
+/* Perennial Pepperweed — academic technical report (litera + custom)
+   Link blue darkened for WCAG AA contrast (≥4.5:1 on white). */
+
+@import url("https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Source+Sans+3:wght@400;600;700&display=swap");
 
 :root {
   --pw-link: #1565c0;
   --pw-link-hover: #0d47a1;
-  --pw-text: #212529;
-  --pw-muted: #495057;
-  --pw-border: #dee2e6;
-  --pw-surface: #f8f9fa;
+  --pw-text: #1a1a1a;
+  --pw-muted: #4a5568;
+  --pw-border: #d0d5dd;
+  --pw-surface: #f7f6f3;
   --pw-focus: #0d47a1;
+  --pw-accent: #1b4f72;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.65;
+  font-family: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  font-size: 1.05rem;
+  line-height: 1.7;
   color: var(--pw-text);
+  font-optical-sizing: auto;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  font-weight: 600;
+h1, h2, h3, h4, h5, h6,
+.navbar,
+#TOC,
+.quarto-title-meta,
+nav {
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
   letter-spacing: -0.01em;
 }
 
-/* Right margin TOC ("On this page") */
+h1.title {
+  font-weight: 700;
+  font-size: 1.85rem;
+  line-height: 1.25;
+  color: var(--pw-accent);
+  max-width: 52rem;
+}
+
+p.subtitle.lead {
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1.05rem;
+  color: var(--pw-muted);
+  font-weight: 400;
+}
+
+/* Abstract block (Quarto) */
+.abstract,
+div.abstract {
+  background: var(--pw-surface);
+  border-left: 4px solid var(--pw-accent);
+  padding: 1.1rem 1.35rem;
+  margin: 1.25rem 0 1.75rem;
+  max-width: 48rem;
+}
+
+.abstract > blockquote,
+div.abstract > blockquote {
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.quarto-title-meta,
+.quarto-title-meta-author {
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.92rem;
+}
+
+/* Keywords if rendered */
+.keywords {
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  color: var(--pw-muted);
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-weight: 700;
+  margin-top: 2.25rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--pw-border);
+}
+
+h3 {
+  font-weight: 600;
+  margin-top: 1.5rem;
+  color: #243447;
+}
+
+/* Right margin TOC */
 #TOC > ul.collapse,
 #TOC ul.collapse {
   display: block !important;
@@ -40,15 +108,18 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #TOC #toc-title {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pw-muted);
   margin-bottom: 0.75rem;
 }
 
 #TOC .nav-link {
   display: block;
   padding: 0.2rem 0;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   line-height: 1.35;
   color: var(--pw-muted);
 }
@@ -65,7 +136,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 #TOC ul ul .nav-link {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
 }
 
 /* Links */
@@ -92,6 +163,8 @@ button:focus-visible,
 table {
   width: 100%;
   margin-bottom: 1rem;
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
 }
 
 .table td,
@@ -109,6 +182,7 @@ table {
 .dataTables_wrapper {
   overflow-x: auto;
   margin-bottom: 1rem;
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .dataTables_wrapper table {
@@ -128,11 +202,9 @@ table {
 .figure img {
   max-width: 100%;
   height: auto;
-  border-radius: 0.25rem;
 }
 
 .leaflet-container {
-  border-radius: 0.25rem;
   border: 1px solid var(--pw-border);
 }
 
@@ -141,28 +213,38 @@ table {
   padding: 0.75rem 1rem;
   background: var(--pw-surface);
   border-left: 3px solid var(--pw-link);
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 0.92rem;
+}
+
+/* Block quotes */
+blockquote {
+  border-left: 3px solid var(--pw-border);
+  color: var(--pw-muted);
+  font-size: 0.98rem;
 }
 
 /* Code */
 pre {
   background-color: var(--pw-surface);
   border: 1px solid #e9ecef;
-  border-radius: 0.25rem;
+  border-radius: 0.2rem;
   padding: 0.75rem 1rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 /* Content blocks */
 .download-section {
   background-color: var(--pw-surface);
-  border: 1px solid #e9ecef;
-  border-radius: 0.25rem;
+  border: 1px solid var(--pw-border);
   padding: 1.25rem;
   margin: 1.5rem 0;
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .download-section h3 {
   margin-bottom: 0.75rem;
+  border: none;
 }
 
 .download-links {
@@ -177,8 +259,8 @@ pre {
   padding: 0.4rem 0.85rem;
   background-color: var(--pw-link);
   color: #fff;
-  border-radius: 0.25rem;
-  font-weight: 500;
+  border-radius: 0.2rem;
+  font-weight: 600;
 }
 
 .download-links a:hover {
@@ -189,10 +271,10 @@ pre {
 
 .spatial-extent {
   background-color: var(--pw-surface);
-  border: 1px solid #e9ecef;
-  border-radius: 0.25rem;
+  border: 1px solid var(--pw-border);
   padding: 1rem;
   margin: 1rem 0;
+  font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
 .spatial-extent h4 {
@@ -201,6 +283,20 @@ pre {
 
 .spatial-extent ul {
   margin-bottom: 0;
+}
+
+/* References */
+#refs,
+.references {
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+#refs .csl-entry,
+.references .csl-entry {
+  margin-bottom: 0.65rem;
+  padding-left: 1.5rem;
+  text-indent: -1.5rem;
 }
 
 /* Hide Quarto navigation envelope artifacts */
@@ -233,6 +329,10 @@ pre {
 @media print {
   #TOC {
     display: none;
+  }
+
+  body {
+    font-size: 11pt;
   }
 
   .dataTables_length,
